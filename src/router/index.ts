@@ -1,7 +1,9 @@
 import App from '@/App.vue'
 import Browse from '@/Browse.vue'
+import Cart from '@/Cart.vue'
 import Discover from '@/Discover.vue'
 import Home from '@/Home.vue'
+import Login from '@/Login.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 
 const router = createRouter({
@@ -12,7 +14,7 @@ const router = createRouter({
       component: Home,
 
       meta: {
-        title: 'Home'
+        title: 'Game Voyager'
       }
     },
 
@@ -31,6 +33,24 @@ const router = createRouter({
 
       meta: {
         title: 'Browse'
+      }
+    },
+
+    {
+      path: '/cart',
+      component: Cart,
+
+      meta: {
+        title: 'Cart'
+      }
+    },
+
+    {
+      path: '/login',
+      component: Login,
+
+      meta: {
+        title: 'Login'
       }
     }
 
