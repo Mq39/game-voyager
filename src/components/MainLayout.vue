@@ -38,7 +38,7 @@ const year = new Date().getFullYear()
                             <span class="position-relative d-inline-block">
                                 <i class="fa-solid fa-cart-shopping fs-4"></i>
 
-                                <!-- badge -->
+                                
                                 <span
                                     class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
                                     style="font-size: 0.65rem;">
