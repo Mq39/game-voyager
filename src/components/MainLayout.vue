@@ -1,8 +1,32 @@
 <script lang="ts" setup>
-import { onMounted, onBeforeUnmount, nextTick, watch } from "vue";
+import { onMounted, onBeforeUnmount, nextTick, watch, computed, ref } from "vue";
 import { useRoute } from "vue-router";
 
 const route = useRoute();
+
+// CHECKING IF CART TAB IS ACTIVE 
+const showCartPrice = computed(() => route.path !== "/cart");
+
+// <---- CART ANIMATION -->
+const cartAnimation = ref(false);
+const triggericonBounce = () => {
+    cartAnimation.value = false; // reset first
+    requestAnimationFrame(() => {
+        cartAnimation.value = true;
+        setTimeout(() => (cartAnimation.value = false), 500);
+    });
+};
+watch(
+    () => route.path,
+    (newPath, oldPath) => {
+        if (newPath === "/cart" && oldPath !== "/cart") triggericonBounce();
+    },
+    { immediate: true }
+);
+
+//<---- END CART ANIMATION ---->
+
+
 let cleanup: Array<() => void> = [];
 
 onMounted(async () => {
@@ -14,15 +38,17 @@ onMounted(async () => {
 
     const links = nav.querySelectorAll<HTMLElement>(".nav-item-link");
 
-    const moveIndicator = (el: HTMLElement) => {
-        const elRect = el.getBoundingClientRect();
-        if (elRect.width === 0 || elRect.height === 0) return; // prevent top-left bug
+    const moveIndicator = (linkEl: HTMLElement) => {
+        const label = linkEl.querySelector<HTMLElement>(".nav-label") ?? linkEl;
+
+        const labelRect = label.getBoundingClientRect();
+        if (labelRect.width === 0 || labelRect.height === 0) return;
 
         const navRect = nav.getBoundingClientRect();
 
-        const left = elRect.left - navRect.left;
-        const width = elRect.width;
-        const top = elRect.bottom - navRect.top + 2;
+        const left = labelRect.left - navRect.left;
+        const width = labelRect.width;
+        const top = labelRect.bottom - navRect.top + 6;
 
         indicator.style.width = `${width}px`;
         indicator.style.transform = `translate(${left}px, ${top}px)`;
@@ -68,6 +94,9 @@ onMounted(async () => {
             requestAnimationFrame(() => moveToActive());
         }
     );
+
+
+
 });
 
 onBeforeUnmount(() => {
@@ -97,59 +126,92 @@ const year = new Date().getFullYear()
 
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <ul class="navbar-nav p-0 me-auto mb-2 mb-lg-0 nav-slider position-relative">
-                        
+
                         <li class="nav-item">
                             <RouterLink
                                 class="nav-link nav-item-link nav-tab d-flex justify-content-center justify-content-lg-start"
                                 to="/discover" active-class="active">
-                                Discover
+
+                                <span class="nav-label">
+                                    <i class="fa-solid fa-compass me-2 d-lg-none opacity-75"></i>
+                                    Discover
+                                </span>
+
                             </RouterLink>
                         </li>
 
-                        <li>
+                        <li class="nav-item">
                             <RouterLink
                                 class="nav-link nav-item-link nav-tab d-flex justify-content-center justify-content-lg-start"
                                 to="/browse" active-class="active">
-                                Browse
+
+                                <span class="nav-label">
+                                    <i class="fa-solid fa-gamepad me-2 d-lg-none opacity-75"></i>
+                                    Browse
+                                </span>
+
                             </RouterLink>
                         </li>
 
                         <li class="nav-item d-lg-none">
                             <RouterLink
-                                class="nav-link nav-item-link d-flex justify-content-center justify-content-lg-start"
-                                to="/cart" active-class="active">Cart
+                                class="nav-link nav-item-link d-flex justify-content-center justify-content-lg-start nav-tab"
+                                to="/cart" active-class="active">
+
+                                <span class="nav-label">
+                                    <i class="fa-solid fa-cart-shopping me-2 opacity-75"></i>
+                                    Cart
+                                </span>
+
                             </RouterLink>
                         </li>
 
                         <li class="nav-item d-lg-none">
                             <RouterLink
-                                class="nav-link nav-item-link d-flex justify-content-center justify-content-lg-start"
-                                to="/login" active-class="active">Login
+                                class="nav-link nav-item-link d-flex justify-content-center justify-content-lg-start nav-tab"
+                                to="/login" active-class="active">
+                                <span class="nav-label">
+                                    <i class="fa-solid fa-user me-2 opacity-75"></i>
+                                    Login
+                                </span>
+                            </RouterLink>
+                        </li>
+                        <!-- Divider -->
+                        <li class="nav-item d-lg-none">
+                            <hr class="dropdown-divider opacity-25 my-2">
+                        </li>
+
+                        <!-- CTA button -->
+                        <li class="nav-item d-lg-none">
+                            <RouterLink class="btn btn-outline-light w-100 mt-2" to="/browse">
+                                Browse Games
                             </RouterLink>
                         </li>
 
+                        <!-- IMPORTANT: keep indicator last -->
                         <span class="nav-indicator"></span>
                     </ul>
 
-                    <div class="glow-link mx-3">
-                        <RouterLink class="nav-link d-flex align-items-center gap-2 p-0 d-none d-lg-inline" to="/cart">
-                            <span class="position-relative d-inline-block">
-                                <i class="fa-solid fa-cart-shopping fs-4 "></i>
+                    <div>
+                        <RouterLink
+                            class="nav-link d-inline-flex align-items-center gap-2 p-0 d-none d-lg-inline-flex glow-link mx-3"
+                            :class="{ 'cart-bounce': cartAnimation }" to="/cart" active-class="active">
+                            <span class="position-relative d-inline-block" :class="{ 'cart-bounce': cartAnimation }">
+                                <i class="fa-solid fa-cart-shopping fs-4"></i>
 
 
-                                <span
-                                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none d-lg-inline"
-                                    style="font-size: 0.65rem;">
+                                <span class=" position-absolute top-0 start-100 translate-middle badge rounded-pill
+                                    bg-danger d-none d-lg-inline" style="font-size: 0.65rem;">
                                     1
                                 </span>
                             </span>
 
-                            <span class="fw-semibold d-none d-lg-inline">€5.74</span>
+                            <span class="fw-semibold d-none d-lg-inline" v-if="showCartPrice">€5.74</span>
 
                         </RouterLink>
                     </div>
 
-                    <RouterLink class="nav-link d-none d-lg-inline" to="/login" active-class="active">
+                    <RouterLink class="nav-link d-none d-lg-inline glow-link mx-3" to="/login" active-class="active">
                         <div class="glow-link mx-2">
                             <i class="fa-solid fa-user  fs-4"></i>
                         </div>
@@ -165,8 +227,7 @@ const year = new Date().getFullYear()
 </template>
 
 <style>
-.glow-link {
-    position: relative;
+.nav-label {
     display: inline-block;
 }
 
@@ -208,5 +269,62 @@ const year = new Date().getFullYear()
 
 .nav-link:hover {
     color: #7C5CFF;
+}
+
+.glow-link {
+    position: relative;
+    display: inline-block;
+}
+
+.glow-link.active {
+    color: #7C5CFF;
+    text-shadow: 0 0 8px #7C5CFF;
+}
+
+.glow-link:hover i {
+    text-shadow: 0 0 12px #7C5CFF;
+}
+
+.cart-bounce {
+    animation: iconBounce 0.28s ease;
+}
+
+@keyframes iconBounce {
+    0% {
+        transform: scale(1);
+    }
+
+    40% {
+        transform: scale(1.06);
+    }
+
+    70% {
+        transform: scale(0.98);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* only affects collapsed dropdown (mobile) */
+@media (max-width: 991.98px) {
+    #navbarSupportedContent {
+        margin-top: 10px;
+        padding: 12px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(0, 0, 0, 0.25);
+        backdrop-filter: blur(8px);
+    }
+
+    #navbarSupportedContent .nav-link {
+        padding: 12px 14px;
+        border-radius: 10px;
+    }
+
+    #navbarSupportedContent .nav-link:hover {
+        background: rgba(255, 255, 255, 0.06);
+    }
 }
 </style>

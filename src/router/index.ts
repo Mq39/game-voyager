@@ -57,7 +57,7 @@ const router = createRouter({
   ],
 })
 
-router.afterEach((to, from, next) => {
+router.afterEach((to) => {
   if (to.meta.title) {
     document.title = `${to.meta.title}`
   }
