@@ -27,6 +27,7 @@ watch(
 //<---- END CART ANIMATION ---->
 
 
+
 let cleanup: Array<() => void> = [];
 
 onMounted(async () => {
@@ -94,9 +95,6 @@ onMounted(async () => {
             requestAnimationFrame(() => moveToActive());
         }
     );
-
-
-
 });
 
 onBeforeUnmount(() => {
@@ -195,8 +193,8 @@ const year = new Date().getFullYear()
                     <div>
                         <RouterLink
                             class="nav-link d-inline-flex align-items-center gap-2 p-0 d-none d-lg-inline-flex glow-link mx-3"
-                            :class="{ 'cart-bounce': cartAnimation }" to="/cart" active-class="active">
-                            <span class="position-relative d-inline-block" :class="{ 'cart-bounce': cartAnimation }">
+                            to="/cart" :class="{ 'cart-bounce': cartAnimation }" active-class="active">
+                            <span class="position-relative d-inline-block">
                                 <i class="fa-solid fa-cart-shopping fs-4"></i>
 
 
@@ -295,7 +293,7 @@ const year = new Date().getFullYear()
     }
 
     40% {
-        transform: scale(1.06);
+        transform: scale(1.20);
     }
 
     70% {
