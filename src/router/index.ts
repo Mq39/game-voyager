@@ -12,46 +12,31 @@ const router = createRouter({
     {
       path: '/',
       component: Home,
-
-      meta: {
-        title: 'Game Voyager'
-      }
+      meta: { title: 'Game Voyager' }
     },
 
     {
       path: '/discover',
       component: Discover,
-
-      meta: {
-        title: 'Discover'
-      }
+      meta: { title: 'Discover' }
     },
 
     {
       path: '/browse',
       component: Browse,
-
-      meta: {
-        title: 'Browse'
-      }
+      meta: { title: 'Browse' }
     },
 
     {
       path: '/cart',
       component: Cart,
-
-      meta: {
-        title: 'Cart'
-      }
+      meta: { title: 'Cart' }
     },
 
     {
       path: '/login',
       component: Login,
-
-      meta: {
-        title: 'Login'
-      }
+      meta: { title: 'Login' }
     }
 
   ],

@@ -1,169 +1,170 @@
 <script lang="ts" setup>
-import { onMounted, onBeforeUnmount, nextTick, watch, computed, ref } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
 const route = useRoute();
+const year = new Date().getFullYear();
 
-// Hide price total when on cart page
+const closeMobileDrawer = () => {
+    const drawerEl = document.getElementById("mobileNav");
+    if (!drawerEl) return;
+
+    const bootstrap = (window as any).bootstrap;
+    if (!bootstrap?.Offcanvas) return;
+
+    const instance = bootstrap.Offcanvas.getInstance(drawerEl)
+        ?? new bootstrap.Offcanvas(drawerEl);
+
+    instance.hide();
+};
+
+/* cart */
+
 const showCartPrice = computed(() => route.path !== "/cart");
-
-// Cart icon bounce when entering /cart
 const cartAnimation = ref(false);
+
 const triggerIconBounce = () => {
     cartAnimation.value = false;
+
     requestAnimationFrame(() => {
         cartAnimation.value = true;
-        setTimeout(() => (cartAnimation.value = false), 450);
+
+        setTimeout(() => {
+            cartAnimation.value = false;
+        }, 500);
     });
 };
 
 watch(
     () => route.path,
     (newPath, oldPath) => {
-        if (newPath === "/cart" && oldPath !== "/cart") triggerIconBounce();
-    }
+        if (newPath === "/cart" && oldPath !== "/cart") {
+            triggerIconBounce();
+        }
+    },
+    { immediate: true }
 );
 
+/* nav indicator */
+
+const navRef = ref<HTMLElement | null>(null);
+const indicatorRef = ref<HTMLElement | null>(null);
+
 let cleanup: Array<() => void> = [];
+
+const isDesktop = () => window.innerWidth >= 992;
+
+const hideIndicator = () => {
+    if (!indicatorRef.value) return;
+
+    indicatorRef.value.style.opacity = "0";
+    indicatorRef.value.style.width = "0px";
+};
+
+const moveIndicatorToLink = (linkEl: HTMLElement) => {
+    const nav = navRef.value;
+    const indicator = indicatorRef.value;
+
+    if (!nav || !indicator || !isDesktop()) {
+        hideIndicator();
+        return;
+    }
+
+    const label = linkEl.querySelector<HTMLElement>(".nav-label") ?? linkEl;
+    const labelRect = label.getBoundingClientRect();
+
+    if (labelRect.width === 0 || labelRect.height === 0) return;
+
+    const navRect = nav.getBoundingClientRect();
+
+    const left = labelRect.left - navRect.left;
+    const width = labelRect.width;
+    const top = labelRect.bottom - navRect.top + 6;
+
+    indicator.style.width = `${width}px`;
+    indicator.style.transform = `translate(${left}px, ${top}px)`;
+    indicator.style.opacity = "1";
+};
+
+const moveIndicatorToActive = () => {
+    const nav = navRef.value;
+    if (!nav || !isDesktop()) {
+        hideIndicator();
+        return;
+    }
+
+    const activeTab = nav.querySelector<HTMLElement>(".nav-tab.active");
+
+    if (!activeTab) {
+        hideIndicator();
+        return;
+    }
+
+    moveIndicatorToLink(activeTab);
+};
 
 onMounted(async () => {
     await nextTick();
 
-    const nav = document.querySelector(".nav-slider") as HTMLElement | null;
-    const indicator = document.querySelector(".nav-indicator") as HTMLElement | null;
-    if (!nav || !indicator) return;
+    const nav = navRef.value;
+    if (!nav) return;
 
     const links = nav.querySelectorAll<HTMLElement>(".nav-item-link");
 
-    const hideIndicator = () => {
-        indicator.style.opacity = "0";
-        indicator.style.width = "0px";
-    };
-
-    const moveIndicator = (linkEl: HTMLElement) => {
-        const label = linkEl.querySelector<HTMLElement>(".nav-label") ?? linkEl;
-
-        const labelRect = label.getBoundingClientRect();
-        if (labelRect.width === 0 || labelRect.height === 0) {
-            hideIndicator();
-            return;
-        }
-
-        const navRect = nav.getBoundingClientRect();
-
-        const left = labelRect.left - navRect.left;
-        const width = labelRect.width;
-        const top = labelRect.bottom - navRect.top + 6;
-
-        indicator.style.width = `${width}px`;
-        indicator.style.transform = `translate(${left}px, ${top}px)`;
-        indicator.style.opacity = "1";
-    };
-
-    const moveToActive = () => {
-        const activeTab = nav.querySelector<HTMLElement>(".nav-tab.active");
-        if (activeTab) moveIndicator(activeTab);
-        else hideIndicator();
-    };
-
-    // Disable / enable transition so we can "snap" without animation
-    const setIndicatorTransition = (on: boolean) => {
-        indicator.style.setProperty("--indicator-transition", on ? "" : "none");
-    };
-
-    const snapToActive = async () => {
-        await nextTick();
-        setIndicatorTransition(false);     // disable animation
-        moveToActive();                   // jump instantly
-        indicator.getBoundingClientRect(); // force reflow
-        setIndicatorTransition(true);      // restore animation for hover
-    };
-
-    // Bootstrap collapse events: snap on open/close to avoid sliding from old position
-    const collapseEl = document.getElementById("navbarSupportedContent");
-    if (collapseEl) {
-        const onShown = () => {
-            snapToActive(); // dropdown opened -> instantly position under active dropdown item
-        };
-
-        const onHidden = () => {
-            snapToActive(); // dropdown closed -> instantly position under active desktop item
-        };
-
-        collapseEl.addEventListener("shown.bs.collapse", onShown);
-        collapseEl.addEventListener("hidden.bs.collapse", onHidden);
-
-        cleanup.push(() => collapseEl.removeEventListener("shown.bs.collapse", onShown));
-        cleanup.push(() => collapseEl.removeEventListener("hidden.bs.collapse", onHidden));
-    }
-
-    // Hover behavior (animated)
     links.forEach((link) => {
-        const onEnter = () => moveIndicator(link);
-        const onLeave = () => moveToActive();
+        const handleMouseEnter = () => moveIndicatorToLink(link);
+        const handleMouseLeave = () => moveIndicatorToActive();
 
-        link.addEventListener("mouseenter", onEnter);
-        link.addEventListener("mouseleave", onLeave);
+        link.addEventListener("mouseenter", handleMouseEnter);
+        link.addEventListener("mouseleave", handleMouseLeave);
 
-        cleanup.push(() => link.removeEventListener("mouseenter", onEnter));
-        cleanup.push(() => link.removeEventListener("mouseleave", onLeave));
+        cleanup.push(() => link.removeEventListener("mouseenter", handleMouseEnter));
+        cleanup.push(() => link.removeEventListener("mouseleave", handleMouseLeave));
     });
 
-    const onNavLeave = () => moveToActive();
-    nav.addEventListener("mouseleave", onNavLeave);
-    cleanup.push(() => nav.removeEventListener("mouseleave", onNavLeave));
+    const handleNavMouseLeave = () => moveIndicatorToActive();
+    nav.addEventListener("mouseleave", handleNavMouseLeave);
+    cleanup.push(() => nav.removeEventListener("mouseleave", handleNavMouseLeave));
 
-    const onResize = () => {
-        // snap on resize to avoid weird sliding when layout changes
-        snapToActive();
-    };
-    window.addEventListener("resize", onResize);
-    cleanup.push(() => window.removeEventListener("resize", onResize));
+    const handleResize = () => moveIndicatorToActive();
+    window.addEventListener("resize", handleResize);
+    cleanup.push(() => window.removeEventListener("resize", handleResize));
 
-    // Initial position
-    moveToActive();
-
-    // Route changes: animate normally (slide). If you want snap instead, call snapToActive().
-    watch(
+    const stopRouteWatcher = watch(
         () => route.fullPath,
         async () => {
             await nextTick();
-            requestAnimationFrame(() => moveToActive());
+            requestAnimationFrame(() => moveIndicatorToActive());
         }
     );
+
+    cleanup.push(stopRouteWatcher);
+
+    moveIndicatorToActive();
 });
 
 onBeforeUnmount(() => {
     cleanup.forEach((fn) => fn());
     cleanup = [];
 });
-
-const year = new Date().getFullYear();
 </script>
 
 <template>
-    <div class="d-flex align-items-center">
-        <RouterLink class="nav-link" to="/" active-class="active">
-            <img src="../assets/GameVoyagerLogo.png" width="120" height="120" alt="Logo" class="me-3" />
-        </RouterLink>
+    <!-- DESKTOP HEADER -->
+    <div class="d-none d-lg-flex align-items-center">
+        <RouterLink class="brand-logo-wrapper" to="/" aria-label="Home">
+    <img src="../assets/GameVoyagerLogo.png" width="120" height="120" alt="Logo" class="me-3">
+</RouterLink>
 
         <nav class="navbar navbar-expand-lg bg-body-tertiary flex-grow-1">
             <div class="container-fluid">
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#navbarSupportedContent">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-
-                <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul class="navbar-nav p-0 me-auto mb-2 mb-lg-0 nav-slider position-relative">
+                <div class="d-flex align-items-center w-100">
+                    <ul ref="navRef" class="navbar-nav p-0 me-auto mb-0 nav-slider position-relative">
                         <li class="nav-item">
                             <RouterLink
                                 class="nav-link nav-item-link nav-tab d-flex justify-content-center justify-content-lg-start"
                                 to="/discover" active-class="active">
-                                <span class="nav-label">
-                                    <i class="fa-solid fa-compass me-2 d-lg-none opacity-75"></i>
-                                    Discover
-                                </span>
+                                <span class="nav-label">Discover</span>
                             </RouterLink>
                         </li>
 
@@ -171,79 +172,140 @@ const year = new Date().getFullYear();
                             <RouterLink
                                 class="nav-link nav-item-link nav-tab d-flex justify-content-center justify-content-lg-start"
                                 to="/browse" active-class="active">
-                                <span class="nav-label">
-                                    <i class="fa-solid fa-gamepad me-2 d-lg-none opacity-75"></i>
-                                    Browse
-                                </span>
+                                <span class="nav-label">Browse</span>
                             </RouterLink>
                         </li>
 
-                        <!-- Mobile-only items -->
-                        <li class="nav-item d-lg-none">
-                            <RouterLink
-                                class="nav-link nav-item-link nav-tab d-flex justify-content-center justify-content-lg-start"
-                                to="/cart" active-class="active">
-                                <span class="nav-label">
-                                    <i class="fa-solid fa-cart-shopping me-2 opacity-75"></i>
-                                    Cart
-                                </span>
-                            </RouterLink>
-                        </li>
-
-                        <li class="nav-item d-lg-none">
-                            <RouterLink
-                                class="nav-link nav-item-link nav-tab d-flex justify-content-center justify-content-lg-start"
-                                to="/login" active-class="active">
-                                <span class="nav-label">
-                                    <i class="fa-solid fa-user me-2 opacity-75"></i>
-                                    Login
-                                </span>
-                            </RouterLink>
-                        </li>
-
-                        <!-- Divider + CTA (mobile) -->
-                        <li class="nav-item d-lg-none">
-                            <hr class="dropdown-divider opacity-25 my-2" />
-                        </li>
-
-                        <li class="nav-item d-lg-none">
-                            <RouterLink class="btn btn-outline-light w-100 mt-2" to="/browse">
-                                Browse Games
-                            </RouterLink>
-                        </li>
-
-                        <!-- IMPORTANT: keep indicator last -->
-                        <span class="nav-indicator"></span>
+                        <span ref="indicatorRef" class="nav-indicator"></span>
                     </ul>
 
-                    <!-- Desktop cart -->
-                    <RouterLink
-                        class="nav-link d-inline-flex align-items-center gap-2 p-0 d-none d-lg-inline-flex glow-link mx-3"
-                        to="/cart" active-class="active">
-                        <span class="position-relative d-inline-block" :class="{ 'cart-bounce': cartAnimation }">
-                            <i class="fa-solid fa-cart-shopping fs-4"></i>
-                            <span
-                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none d-lg-inline"
-                                style="font-size: 0.65rem;">
-                                1
+                    <div>
+                        <RouterLink class="nav-link d-inline-flex align-items-center gap-2 p-0 glow-link mx-3"
+                            to="/cart" :class="{ 'cart-bounce': cartAnimation }" active-class="active">
+                            <span class="position-relative d-inline-block">
+                                <i class="fa-solid fa-cart-shopping fs-4"></i>
+
+                                <span
+                                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                    style="font-size: 0.65rem;">
+                                    1
+                                </span>
                             </span>
-                        </span>
 
-                        <span v-if="showCartPrice" class="fw-semibold d-none d-lg-inline">€5.74</span>
-                    </RouterLink>
+                            <span v-if="showCartPrice" class="fw-semibold">
+                                €5.74
+                            </span>
+                        </RouterLink>
+                    </div>
 
-                    <!-- Desktop user -->
-                    <RouterLink class="nav-link d-none d-lg-inline glow-link mx-3" to="/login" active-class="active">
-                        <i class="fa-solid fa-user fs-4"></i>
+                    <RouterLink class="nav-link glow-link mx-3" to="/login" active-class="active">
+                        <div class="glow-link mx-2">
+                            <i class="fa-solid fa-user fs-4"></i>
+                        </div>
                     </RouterLink>
                 </div>
             </div>
         </nav>
     </div>
 
+    <!-- MOBILE HEADER -->
+    <div class="mobile-header d-lg-none">
+        <button class="mobile-menu-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileNav"
+            aria-controls="mobileNav" aria-label="Open menu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="mobile-logo-link">
+            <img src="../assets/GameVoyagerLogo.png" alt="Logo" class="mobile-logo">
+        </div>
+
+        <div class="mobile-right-actions">
+            <RouterLink class="mobile-action-link glow-link" to="/cart" :class="{ 'cart-bounce': cartAnimation }"
+                active-class="active" aria-label="Cart">
+                <span class="position-relative d-inline-flex">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span
+                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger mobile-cart-badge">
+                        1
+                    </span>
+                </span>
+            </RouterLink>
+
+            <RouterLink class="mobile-action-link glow-link" to="/login" active-class="active" aria-label="Login">
+                <i class="fa-solid fa-user"></i>
+            </RouterLink>
+        </div>
+    </div>
+
+    <!-- MOBILE DRAWER -->
+    <div class="offcanvas offcanvas-start mobile-drawer d-lg-none" tabindex="-1" id="mobileNav"
+        aria-labelledby="mobileNavLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="mobileNavLabel">GameVoyager</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
+                aria-label="Close"></button>
+        </div>
+
+        <div class="offcanvas-body">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <RouterLink class="nav-link d-flex align-items-center" to="/" active-class="active"
+                        @click="closeMobileDrawer">
+                        <i class="fa-solid fa-house me-2 opacity-75"></i>
+                        Home
+                    </RouterLink>
+                </li>
+
+                <li class="nav-item">
+                    <RouterLink class="nav-link d-flex align-items-center" to="/discover" active-class="active"
+                        @click="closeMobileDrawer">
+                        <i class="fa-solid fa-compass me-2 opacity-75"></i>
+                        Discover
+                    </RouterLink>
+                </li>
+
+                <li class="nav-item">
+                    <RouterLink class="nav-link d-flex align-items-center" to="/browse" active-class="active"
+                        @click="closeMobileDrawer">
+                        <i class="fa-solid fa-gamepad me-2 opacity-75"></i>
+                        Browse
+                    </RouterLink>
+                </li>
+
+                <li class="nav-item">
+                    <RouterLink class="nav-link d-flex align-items-center" to="/cart" active-class="active"
+                        @click="closeMobileDrawer">
+                        <i class="fa-solid fa-cart-shopping me-2 opacity-75"></i>
+                        Cart
+                    </RouterLink>
+                </li>
+
+                <li class="nav-item">
+                    <RouterLink class="nav-link d-flex align-items-center" to="/login" active-class="active"
+                        @click="closeMobileDrawer">
+                        <i class="fa-solid fa-user me-2 opacity-75"></i>
+                        Login
+                    </RouterLink>
+                </li>
+
+                <li class="nav-item">
+                    <hr class="dropdown-divider opacity-25 my-3">
+                </li>
+
+                <li class="nav-item">
+                    <RouterLink class="btn btn-outline-light w-100" to="/browse" @click="closeMobileDrawer">
+                        Browse Games
+                    </RouterLink>
+                </li>
+            </ul>
+        </div>
+    </div>
+
     <slot></slot>
 
-    <footer class="mt-3 text-center">&copy; {{ year }} - GameVoyager</footer>
+    <footer class="mt-3 text-center">
+        &copy; {{ year }} - GameVoyager
+    </footer>
 </template>
 
 <style>
@@ -251,7 +313,6 @@ const year = new Date().getFullYear();
     display: inline-block;
 }
 
-/* underline container */
 .nav-slider {
     position: relative;
 }
@@ -265,20 +326,16 @@ const year = new Date().getFullYear();
     color: #7C5CFF;
 }
 
-/* The single moving line */
 .nav-indicator {
     position: absolute;
     left: 0;
     top: 0;
     height: 2px;
     width: 0;
-
     background: #7C5CFF;
     box-shadow: 0 0 8px #7C5CFF;
-
     transform: translate(0, 0);
-    transition: var(--indicator-transition, transform 220ms ease), width 220ms ease, opacity 220ms ease;
-
+    transition: transform 220ms ease, width 220ms ease, opacity 220ms ease;
     opacity: 0;
     pointer-events: none;
 }
@@ -287,7 +344,6 @@ const year = new Date().getFullYear();
     color: #7C5CFF;
 }
 
-/* Icon glow */
 .glow-link {
     position: relative;
     display: inline-block;
@@ -302,10 +358,8 @@ const year = new Date().getFullYear();
     text-shadow: 0 0 12px #7C5CFF;
 }
 
-/* Cart bounce */
 .cart-bounce {
     animation: iconBounce 0.28s ease;
-    transform-origin: center;
 }
 
 @keyframes iconBounce {
@@ -314,11 +368,11 @@ const year = new Date().getFullYear();
     }
 
     40% {
-        transform: scale(1.06);
+        transform: scale(1.2);
     }
 
     70% {
-        transform: scale(0.98);
+        transform: scale(0.92);
     }
 
     100% {
@@ -326,24 +380,133 @@ const year = new Date().getFullYear();
     }
 }
 
-/* mobile dropdown style */
+.brand-logo-wrapper {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.mobile-header {
+    display: flex;
+    align-items: center;
+    width: 100vw;
+    max-width: 100vw;
+    min-height: 70px;
+    padding: 0 14px;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    background: #2f3136;
+    box-sizing: border-box;
+}
+
+.mobile-menu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin-right: 10px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.mobile-menu-btn .navbar-toggler-icon {
+    filter: invert(1);
+    opacity: 0.95;
+}
+
+.mobile-menu-btn:focus,
+.mobile-menu-btn:active {
+    outline: none;
+    box-shadow: none;
+}
+
+.mobile-logo-link {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.mobile-logo {
+    height: 40px;
+    width: auto;
+    display: block;
+    object-fit: contain;
+}
+
+.mobile-right-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.mobile-action-link {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 1.35rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+}
+
+.mobile-action-link.active {
+    color: #7C5CFF;
+    text-shadow: 0 0 8px #7C5CFF;
+}
+
+.mobile-action-link:hover i {
+    text-shadow: 0 0 12px #7C5CFF;
+}
+
+.mobile-cart-badge {
+    font-size: 0.6rem;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+}
+
+.mobile-drawer {
+    --bs-offcanvas-width: min(78vw, 320px);
+    background: #11131c;
+    color: #fff;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mobile-drawer .offcanvas-title {
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+.mobile-drawer .nav-link {
+    color: rgba(255, 255, 255, 0.88);
+    padding: 12px 10px;
+    border-radius: 10px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.mobile-drawer .nav-link:hover,
+.mobile-drawer .nav-link.active {
+    color: #7C5CFF;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.mobile-drawer .offcanvas-body {
+    overflow-x: hidden;
+}
+
+.mobile-drawer .btn {
+    border-radius: 12px;
+}
+
 @media (max-width: 991.98px) {
-    #navbarSupportedContent {
-        margin-top: 10px;
-        padding: 12px;
-        border-radius: 14px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        background: rgba(0, 0, 0, 0.25);
-        backdrop-filter: blur(8px);
-    }
-
-    #navbarSupportedContent .nav-link {
-        padding: 12px 14px;
-        border-radius: 10px;
-    }
-
-    #navbarSupportedContent .nav-link:hover {
-        background: rgba(255, 255, 255, 0.06);
+    .nav-indicator {
+        display: none;
     }
 }
 </style>
