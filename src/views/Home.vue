@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import MainLayout from './components/MainLayout.vue';
+import MainLayout from '../components/MainLayout.vue';
 
 </script>
 
@@ -16,13 +16,13 @@ import MainLayout from './components/MainLayout.vue';
             </div>
             <div class="carousel-inner">
                 <div class="carousel-item active" data-bs-interval="10000">
-                    <img src="./assets/GameVoyagerLogo.png" class="d-block w-100 hero-img" alt="...">
+                    <img src="../assets/GameVoyagerLogo.png" class="d-block w-100 hero-img" alt="...">
                 </div>
                 <div class="carousel-item" data-bs-interval="10000">
-                    <img src="./assets/GameVoyagerLogo.png" class="d-block w-100 hero-img" alt="...">
+                    <img src="../assets/GameVoyagerLogo.png" class="d-block w-100 hero-img" alt="...">
                 </div>
                 <div class="carousel-item" data-bs-interval="10000">
-                    <img src="./assets/GameVoyagerLogo.png" class="d-block w-100 hero-img" alt="...">
+                    <img src="../assets/GameVoyagerLogo.png" class="d-block w-100 hero-img" alt="...">
                 </div>
             </div>
             <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators"

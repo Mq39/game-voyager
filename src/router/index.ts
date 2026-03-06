@@ -1,9 +1,9 @@
 import App from '@/App.vue'
-import Browse from '@/Browse.vue'
-import Cart from '@/Cart.vue'
-import Discover from '@/Discover.vue'
-import Home from '@/Home.vue'
-import Login from '@/Login.vue'
+import Browse from '@/views/Browse.vue'
+import Cart from '@/views/Cart.vue'
+import Discover from '@/views/Discover.vue'
+import Home from '@/views/Home.vue'
+import Login from '@/views/Login.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 
 const router = createRouter({
@@ -36,7 +36,9 @@ const router = createRouter({
     {
       path: '/login',
       component: Login,
-      meta: { title: 'Login' }
+      meta: {
+        title: 'Login'
+      }
     }
 
   ],
