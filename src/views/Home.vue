@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import MainLayout from '../components/MainLayout.vue';
+import PopularGamesList from '../components/PopularGamesList.vue';
 
 </script>
 
@@ -84,6 +85,7 @@ import MainLayout from '../components/MainLayout.vue';
                 </div>
             </div>
         </section>
+        <PopularGamesList></PopularGamesList>
     </MainLayout>
 </template>
 

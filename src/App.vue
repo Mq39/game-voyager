@@ -5,9 +5,7 @@
 <template>
   <div class="stars"></div>
   <div class="particles"></div>
-  <div class="container">
     <RouterView />
-  </div>
 </template>
 
 <style>

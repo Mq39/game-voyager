@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
+import Footer from './Footer.vue'
 
 const route = useRoute();
 const year = new Date().getFullYear();
@@ -150,162 +151,161 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <!-- DESKTOP HEADER -->
-    <div class="d-none d-lg-flex align-items-center">
-        <RouterLink class="brand-logo-wrapper" to="/" aria-label="Home">
-    <img src="../assets/GameVoyagerLogo.png" width="120" height="120" alt="Logo" class="me-3">
-</RouterLink>
+    <div class="container">
+        <!-- DESKTOP HEADER -->
+        <div class="d-none d-lg-flex align-items-center">
+            <RouterLink class="brand-logo-wrapper" to="/" aria-label="Home">
+                <img src="../assets/GameVoyagerLogo.png" width="120" height="120" alt="Logo" class="me-3">
+            </RouterLink>
 
-        <nav class="navbar navbar-expand-lg bg-body-tertiary flex-grow-1">
-            <div class="container-fluid">
-                <div class="d-flex align-items-center w-100">
-                    <ul ref="navRef" class="navbar-nav p-0 me-auto mb-0 nav-slider position-relative">
-                        <li class="nav-item">
-                            <RouterLink
-                                class="nav-link nav-item-link nav-tab d-flex justify-content-center justify-content-lg-start"
-                                to="/discover" active-class="active">
-                                <span class="nav-label">Discover</span>
-                            </RouterLink>
-                        </li>
+            <nav class="navbar navbar-expand-lg bg-body-tertiary flex-grow-1">
+                <div class="container-fluid">
+                    <div class="d-flex align-items-center w-100">
+                        <ul ref="navRef" class="navbar-nav p-0 me-auto mb-0 nav-slider position-relative">
+                            <li class="nav-item">
+                                <RouterLink
+                                    class="nav-link nav-item-link nav-tab d-flex justify-content-center justify-content-lg-start"
+                                    to="/discover" active-class="active">
+                                    <span class="nav-label">Discover</span>
+                                </RouterLink>
+                            </li>
 
-                        <li class="nav-item">
-                            <RouterLink
-                                class="nav-link nav-item-link nav-tab d-flex justify-content-center justify-content-lg-start"
-                                to="/browse" active-class="active">
-                                <span class="nav-label">Browse</span>
-                            </RouterLink>
-                        </li>
+                            <li class="nav-item">
+                                <RouterLink
+                                    class="nav-link nav-item-link nav-tab d-flex justify-content-center justify-content-lg-start"
+                                    to="/browse" active-class="active">
+                                    <span class="nav-label">Browse</span>
+                                </RouterLink>
+                            </li>
 
-                        <span ref="indicatorRef" class="nav-indicator"></span>
-                    </ul>
+                            <span ref="indicatorRef" class="nav-indicator"></span>
+                        </ul>
 
-                    <div>
-                        <RouterLink class="nav-link d-inline-flex align-items-center gap-2 p-0 glow-link mx-3"
-                            to="/cart" :class="{ 'cart-bounce': cartAnimation }" active-class="active">
-                            <span class="position-relative d-inline-block">
-                                <i class="fa-solid fa-cart-shopping fs-4"></i>
+                        <div>
+                            <RouterLink class="nav-link d-inline-flex align-items-center gap-2 p-0 glow-link mx-3"
+                                to="/cart" :class="{ 'cart-bounce': cartAnimation }" active-class="active">
+                                <span class="position-relative d-inline-block">
+                                    <i class="fa-solid fa-cart-shopping fs-4"></i>
 
-                                <span
-                                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                                    style="font-size: 0.65rem;">
-                                    1
+                                    <span
+                                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                        style="font-size: 0.65rem;">
+                                        1
+                                    </span>
                                 </span>
-                            </span>
 
-                            <span v-if="showCartPrice" class="fw-semibold">
-                                €5.74
-                            </span>
+                                <span v-if="showCartPrice" class="fw-semibold">
+                                    €5.74
+                                </span>
+                            </RouterLink>
+                        </div>
+
+                        <RouterLink class="nav-link glow-link mx-3" to="/login" active-class="active">
+                            <div class="glow-link mx-2">
+                                <i class="fa-solid fa-user fs-4"></i>
+                            </div>
                         </RouterLink>
                     </div>
-
-                    <RouterLink class="nav-link glow-link mx-3" to="/login" active-class="active">
-                        <div class="glow-link mx-2">
-                            <i class="fa-solid fa-user fs-4"></i>
-                        </div>
-                    </RouterLink>
                 </div>
+            </nav>
+        </div>
+
+        <!-- MOBILE HEADER -->
+        <div class="mobile-header d-lg-none">
+            <button class="mobile-menu-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileNav"
+                aria-controls="mobileNav" aria-label="Open menu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="mobile-logo-link">
+                <img src="../assets/GameVoyagerLogo.png" alt="Logo" class="mobile-logo">
             </div>
-        </nav>
-    </div>
 
-    <!-- MOBILE HEADER -->
-    <div class="mobile-header d-lg-none">
-        <button class="mobile-menu-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileNav"
-            aria-controls="mobileNav" aria-label="Open menu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="mobile-logo-link">
-            <img src="../assets/GameVoyagerLogo.png" alt="Logo" class="mobile-logo">
-        </div>
-
-        <div class="mobile-right-actions">
-            <RouterLink class="mobile-action-link glow-link" to="/cart" :class="{ 'cart-bounce': cartAnimation }"
-                active-class="active" aria-label="Cart">
-                <span class="position-relative d-inline-flex">
-                    <i class="fa-solid fa-cart-shopping"></i>
-                    <span
-                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger mobile-cart-badge">
-                        1
+            <div class="mobile-right-actions">
+                <RouterLink class="mobile-action-link glow-link" to="/cart" :class="{ 'cart-bounce': cartAnimation }"
+                    active-class="active" aria-label="Cart">
+                    <span class="position-relative d-inline-flex">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                        <span
+                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger mobile-cart-badge">
+                            1
+                        </span>
                     </span>
-                </span>
-            </RouterLink>
+                </RouterLink>
 
-            <RouterLink class="mobile-action-link glow-link" to="/login" active-class="active" aria-label="Login">
-                <i class="fa-solid fa-user"></i>
-            </RouterLink>
+                <RouterLink class="mobile-action-link glow-link" to="/login" active-class="active" aria-label="Login">
+                    <i class="fa-solid fa-user"></i>
+                </RouterLink>
+            </div>
         </div>
+
+        <!-- MOBILE DRAWER -->
+        <div class="offcanvas offcanvas-start mobile-drawer d-lg-none" tabindex="-1" id="mobileNav"
+            aria-labelledby="mobileNavLabel">
+            <div class="offcanvas-header">
+                <h5 class="offcanvas-title" id="mobileNavLabel">GameVoyager</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
+                    aria-label="Close"></button>
+            </div>
+
+            <div class="offcanvas-body">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <RouterLink class="nav-link d-flex align-items-center" to="/" active-class="active"
+                            @click="closeMobileDrawer">
+                            <i class="fa-solid fa-house me-2 opacity-75"></i>
+                            Home
+                        </RouterLink>
+                    </li>
+
+                    <li class="nav-item">
+                        <RouterLink class="nav-link d-flex align-items-center" to="/discover" active-class="active"
+                            @click="closeMobileDrawer">
+                            <i class="fa-solid fa-compass me-2 opacity-75"></i>
+                            Discover
+                        </RouterLink>
+                    </li>
+
+                    <li class="nav-item">
+                        <RouterLink class="nav-link d-flex align-items-center" to="/browse" active-class="active"
+                            @click="closeMobileDrawer">
+                            <i class="fa-solid fa-gamepad me-2 opacity-75"></i>
+                            Browse
+                        </RouterLink>
+                    </li>
+
+                    <li class="nav-item">
+                        <RouterLink class="nav-link d-flex align-items-center" to="/cart" active-class="active"
+                            @click="closeMobileDrawer">
+                            <i class="fa-solid fa-cart-shopping me-2 opacity-75"></i>
+                            Cart
+                        </RouterLink>
+                    </li>
+
+                    <li class="nav-item">
+                        <RouterLink class="nav-link d-flex align-items-center" to="/login" active-class="active"
+                            @click="closeMobileDrawer">
+                            <i class="fa-solid fa-user me-2 opacity-75"></i>
+                            Login
+                        </RouterLink>
+                    </li>
+
+                    <li class="nav-item">
+                        <hr class="dropdown-divider opacity-25 my-3">
+                    </li>
+
+                    <li class="nav-item">
+                        <RouterLink class="btn btn-outline-light w-100" to="/browse" @click="closeMobileDrawer">
+                            Browse Games
+                        </RouterLink>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <slot></slot>
     </div>
-
-    <!-- MOBILE DRAWER -->
-    <div class="offcanvas offcanvas-start mobile-drawer d-lg-none" tabindex="-1" id="mobileNav"
-        aria-labelledby="mobileNavLabel">
-        <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="mobileNavLabel">GameVoyager</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
-                aria-label="Close"></button>
-        </div>
-
-        <div class="offcanvas-body">
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <RouterLink class="nav-link d-flex align-items-center" to="/" active-class="active"
-                        @click="closeMobileDrawer">
-                        <i class="fa-solid fa-house me-2 opacity-75"></i>
-                        Home
-                    </RouterLink>
-                </li>
-
-                <li class="nav-item">
-                    <RouterLink class="nav-link d-flex align-items-center" to="/discover" active-class="active"
-                        @click="closeMobileDrawer">
-                        <i class="fa-solid fa-compass me-2 opacity-75"></i>
-                        Discover
-                    </RouterLink>
-                </li>
-
-                <li class="nav-item">
-                    <RouterLink class="nav-link d-flex align-items-center" to="/browse" active-class="active"
-                        @click="closeMobileDrawer">
-                        <i class="fa-solid fa-gamepad me-2 opacity-75"></i>
-                        Browse
-                    </RouterLink>
-                </li>
-
-                <li class="nav-item">
-                    <RouterLink class="nav-link d-flex align-items-center" to="/cart" active-class="active"
-                        @click="closeMobileDrawer">
-                        <i class="fa-solid fa-cart-shopping me-2 opacity-75"></i>
-                        Cart
-                    </RouterLink>
-                </li>
-
-                <li class="nav-item">
-                    <RouterLink class="nav-link d-flex align-items-center" to="/login" active-class="active"
-                        @click="closeMobileDrawer">
-                        <i class="fa-solid fa-user me-2 opacity-75"></i>
-                        Login
-                    </RouterLink>
-                </li>
-
-                <li class="nav-item">
-                    <hr class="dropdown-divider opacity-25 my-3">
-                </li>
-
-                <li class="nav-item">
-                    <RouterLink class="btn btn-outline-light w-100" to="/browse" @click="closeMobileDrawer">
-                        Browse Games
-                    </RouterLink>
-                </li>
-            </ul>
-        </div>
-    </div>
-
-    <slot></slot>
-
-    <footer class="mt-3 text-center">
-        &copy; {{ year }} - GameVoyager
-    </footer>
+    <Footer></Footer>
 </template>
 
 <style>
