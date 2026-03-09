@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
-import Footer from './Footer.vue'
+import Footer from '@/components/layout/Footer.vue'
 
 const route = useRoute();
 const year = new Date().getFullYear();
@@ -155,7 +155,7 @@ onBeforeUnmount(() => {
         <!-- DESKTOP HEADER -->
         <div class="d-none d-lg-flex align-items-center">
             <RouterLink class="brand-logo-wrapper" to="/" aria-label="Home">
-                <img src="../assets/GameVoyagerLogo.png" width="120" height="120" alt="Logo" class="me-3">
+                <img src="@/assets/GameVoyagerLogo.png" width="120" height="120" alt="Logo" class="me-3">
             </RouterLink>
 
             <nav class="navbar navbar-expand-lg bg-body-tertiary flex-grow-1">
@@ -218,7 +218,7 @@ onBeforeUnmount(() => {
             </button>
 
             <div class="mobile-logo-link">
-                <img src="../assets/GameVoyagerLogo.png" alt="Logo" class="mobile-logo">
+                <img src="@/assets/GameVoyagerLogo.png" alt="Logo" class="mobile-logo">
             </div>
 
             <div class="mobile-right-actions">
