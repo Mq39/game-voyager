@@ -2,6 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import Footer from '@/components/layout/Footer.vue'
+import Breadcrumbs from "./Breadcrumbs.vue";
 
 const route = useRoute();
 const year = new Date().getFullYear();
@@ -302,6 +303,8 @@ onBeforeUnmount(() => {
                 </ul>
             </div>
         </div>
+        
+        <Breadcrumbs />
 
         <slot></slot>
     </div>

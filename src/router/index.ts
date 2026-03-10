@@ -1,4 +1,5 @@
 import App from '@/App.vue'
+import Breadcrumbs from '@/components/layout/Breadcrumbs.vue'
 import Browse from '@/views/Browse.vue'
 import Cart from '@/views/Cart.vue'
 import Discover from '@/views/Discover.vue'
@@ -12,33 +13,31 @@ const router = createRouter({
     {
       path: '/',
       component: Home,
-      meta: { title: 'Game Voyager' }
+      meta: { title: 'Game Voyager', breadcrumb: 'Home' }
     },
 
     {
       path: '/discover',
       component: Discover,
-      meta: { title: 'Discover' }
+      meta: { title: 'Discover', breadcrumb: 'Discover' }
     },
 
     {
       path: '/browse',
       component: Browse,
-      meta: { title: 'Browse' }
+      meta: { title: 'Browse', breadcrumb: 'Browse' }
     },
 
     {
       path: '/cart',
       component: Cart,
-      meta: { title: 'Cart' }
+      meta: { title: 'Cart', breadcrumb: 'Cart' }
     },
 
     {
       path: '/login',
       component: Login,
-      meta: {
-        title: 'Login'
-      }
+      meta: { title: 'Login', breadcrumb: 'Home' }
     }
 
   ],
