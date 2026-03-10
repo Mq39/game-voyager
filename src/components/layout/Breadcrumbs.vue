@@ -27,7 +27,7 @@ const currentBreadcrumb = computed(() => {
     </div>
 </template>
 
-<style>
+<style scoped>
 .breadcrumb {
     margin-bottom: 1.5rem;
 }
