@@ -1,5 +1,5 @@
 import App from '@/App.vue'
-import Breadcrumbs from '@/components/layout/Breadcrumbs.vue'
+import Breadcrumbs from '@/components/layout/MainLayout-components/Breadcrumbs.vue'
 import Browse from '@/views/Browse.vue'
 import Cart from '@/views/Cart.vue'
 import Discover from '@/views/Discover.vue'

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import Footer from "@/components/layout/Footer.vue"
-import Breadcrumbs from "@/components/layout/Breadcrumbs.vue"
-import Navbar from "@/components/layout/Navbar.vue"
+import Footer from "@/components/layout/MainLayout-components/Footer.vue"
+import Breadcrumbs from "@/components/layout/MainLayout-components/Breadcrumbs.vue"
+import Navbar from "@/components/layout/MainLayout-components/Navbar.vue"
 </script>
 
 <template>

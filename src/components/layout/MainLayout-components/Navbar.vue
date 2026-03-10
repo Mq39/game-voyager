@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
+import SearchBar from '@/components/layout/SearchBar.vue'
+import logo from '@/assets/GameVoyagerLogo.png'
 
 const route = useRoute();
 
@@ -18,8 +20,6 @@ const closeMobileDrawer = () => {
 };
 
 /* cart */
-
-const showCartPrice = computed(() => route.path !== "/cart");
 const cartAnimation = ref(false);
 
 const triggerIconBounce = () => {
@@ -150,13 +150,13 @@ onBeforeUnmount(() => {
 <template>
     <div class="d-none d-lg-flex align-items-center">
         <RouterLink class="brand-logo-wrapper" to="/" aria-label="Home">
-            <img src="@/assets/GameVoyagerLogo.png" width="120" height="120" alt="Logo" class="me-3">
+            <img :src="logo" width="120" height="120" alt="Logo" class="me-3">
         </RouterLink>
 
         <nav class="navbar navbar-expand-lg bg-body-tertiary flex-grow-1">
             <div class="container-fluid">
                 <div class="d-flex align-items-center w-100">
-                    <ul ref="navRef" class="navbar-nav p-0 me-auto mb-0 nav-slider position-relative">
+                    <ul ref="navRef" class="navbar-nav p-0  mb-0 nav-slider position-relative">
                         <li class="nav-item">
                             <RouterLink
                                 class="nav-link nav-item-link nav-tab d-flex justify-content-center justify-content-lg-start"
@@ -176,6 +176,11 @@ onBeforeUnmount(() => {
                         <span ref="indicatorRef" class="nav-indicator"></span>
                     </ul>
 
+                    <div class="navbar-search-region d-none d-lg-flex">
+                        <SearchBar />
+                    </div>
+
+
                     <div>
                         <RouterLink class="nav-link d-inline-flex align-items-center gap-2 p-0 glow-link mx-3"
                             to="/cart" :class="{ 'cart-bounce': cartAnimation }" active-class="active">
@@ -189,7 +194,7 @@ onBeforeUnmount(() => {
                                 </span>
                             </span>
 
-                            <span v-if="showCartPrice" class="fw-semibold">
+                            <span class="fw-semibold">
                                 €5.74
                             </span>
                         </RouterLink>
@@ -213,7 +218,7 @@ onBeforeUnmount(() => {
         </button>
 
         <div class="mobile-logo-link">
-            <img src="@/assets/GameVoyagerLogo.png" alt="Logo" class="mobile-logo">
+            <img :src="logo" alt="Logo" class="mobile-logo">
         </div>
 
         <div class="mobile-right-actions">
@@ -261,6 +266,7 @@ onBeforeUnmount(() => {
                     </RouterLink>
                 </li>
 
+
                 <li class="nav-item">
                     <RouterLink class="nav-link d-flex align-items-center" to="/browse" active-class="active"
                         @click="closeMobileDrawer">
@@ -268,6 +274,8 @@ onBeforeUnmount(() => {
                         Browse
                     </RouterLink>
                 </li>
+
+
 
                 <li class="nav-item">
                     <RouterLink class="nav-link d-flex align-items-center" to="/cart" active-class="active"
@@ -498,5 +506,14 @@ onBeforeUnmount(() => {
     .nav-indicator {
         display: none;
     }
+}
+
+.navbar-search-region {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    min-width: 180px;
+    margin-left: 16px;
+    margin-right: 8px;
 }
 </style>

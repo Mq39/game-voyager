@@ -10,7 +10,7 @@ const currentBreadcrumb = computed(() => {
 
 </script>
 <template>
-    <div class="container mt-3">
+    <div class="container mt-3 d-none d-lg-block">
         <nav v-if="route.path !== '/'" aria-label="breadcrumb">
             <ol class="breadcrumb">
 
