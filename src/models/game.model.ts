@@ -1,9 +1,11 @@
 export interface Game {
     id: number
     title: string
-    price: number
-    oldPrice?: number
     image: string
+    price?: number | undefined
+    oldPrice?: number
     badge?: string
     rank?: number
+    rating?: number
+    released?: string
 }

@@ -135,7 +135,7 @@ const handleBlur = () => {
     height: 42px;
     width: 100%;
     padding-left: 40px;
-    border-radius: 999px;
+    border-radius: 1000px;
     border: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba(255, 255, 255, 0.06);
     color: #ffffff;

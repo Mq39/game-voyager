@@ -1,24 +1,17 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import type { Game } from '@/models/game.model'
-import logo from '@/assets/GameVoyagerLogo.png'
+import axios from "axios"
 
-const games = ref<Game[]>(
-    Array.from({ length: 20 }, (_, i) => ({
-        id: i + 1,
-        title: `Popular Game ${i + 1}`,
-        price: Number((19.99 + i * 2.15).toFixed(2)),
-        oldPrice: i % 3 === 0 ? Number((29.99 + i * 2.5).toFixed(2)) : undefined,
-        image: logo,
-        badge: i % 4 === 0 ? 'Hot' : i % 5 === 0 ? 'New' : undefined,
-        rank: i + 1,
-    }))
-)
-
+const games = ref<Game[]>([])
 const scrollContainer = ref<HTMLElement | null>(null)
 const currentPage = ref(0)
+const loading = ref(true)
 
-const formatPrice = (value: number) => `€${value.toFixed(2)}`
+const formatPrice = (value: number | undefined) => {
+    if (value == null) return "N/A"
+    return `€${value.toFixed(2)}`
+}
 
 const getItemsPerScroll = () => {
     const width = window.innerWidth
@@ -101,7 +94,17 @@ const handleResize = () => {
     scrollToPage(currentPage.value, 'auto')
 }
 
+const fetchPopularGames = async () => {
+    try {
+        const response = await axios.get("http://localhost:4000/api/games/popular")
+        console.log(response.data)
+        games.value = response.data
+    } catch (error) {
+        console.error("Failed to fetch popular games:", error)
+    } finally { loading.value = false }
+}
 onMounted(async () => {
+    await fetchPopularGames()
     await nextTick()
 
     if (scrollContainer.value) {
@@ -143,35 +146,52 @@ onBeforeUnmount(() => {
         </div>
 
         <div ref="scrollContainer" class="popular-scroll-row">
-            <RouterLink v-for="game in games" :key="game.id" :to="`/browse?game=${game.id}`" class="popular-game-card">
-                <div class="popular-game-image-wrap">
-                    <img :src="game.image" :alt="game.title" class="popular-game-image" />
+            <div ref="scrollContainer" class="popular-scroll-row">
 
-                    <div class="popular-rank-badge">
-                        #{{ game.rank }}
-                    </div>
+                <!-- Skeleton cards while loading -->
+                <div v-if="loading" v-for="n in 10" :key="'skeleton-' + n" class="popular-game-card skeleton-card">
+                    <div class="skeleton-image"></div>
 
-                    <div v-if="game.badge" class="popular-status-badge">
-                        {{ game.badge }}
-                    </div>
-                </div>
-
-                <div class="popular-game-body">
-                    <h3 class="popular-game-title">
-                        {{ game.title }}
-                    </h3>
-
-                    <div class="popular-price-block">
-                        <span v-if="game.oldPrice" class="popular-old-price">
-                            {{ formatPrice(game.oldPrice) }}
-                        </span>
-
-                        <span class="popular-price">
-                            {{ formatPrice(game.price) }}
-                        </span>
+                    <div class="popular-game-body">
+                        <div class="skeleton-title"></div>
+                        <div class="skeleton-price"></div>
                     </div>
                 </div>
-            </RouterLink>
+
+
+                <!-- Real cards once data loads -->
+                <RouterLink v-else v-for="game in games" :key="game.id" :to="`/browse?game=${game.id}`"
+                    class="popular-game-card">
+                    <div class="popular-game-image-wrap">
+                        <img :src="game.image" :alt="game.title" class="popular-game-image" />
+
+                        <div class="popular-rank-badge">
+                            #{{ game.rank }}
+                        </div>
+
+                        <div v-if="game.badge" class="popular-status-badge">
+                            {{ game.badge }}
+                        </div>
+                    </div>
+
+                    <div class="popular-game-body">
+                        <h3 class="popular-game-title">
+                            {{ game.title }}
+                        </h3>
+
+                        <div class="popular-price-block">
+                            <span v-if="game.oldPrice" class="popular-old-price">
+                                {{ formatPrice(game.oldPrice) }}
+                            </span>
+
+                            <span class="popular-price">
+                                {{ formatPrice(game.price) }}
+                            </span>
+                        </div>
+                    </div>
+                </RouterLink>
+
+            </div>
         </div>
     </section>
 </template>
@@ -387,6 +407,46 @@ onBeforeUnmount(() => {
 
     .popular-game-card {
         flex-basis: 180px;
+    }
+}
+
+.skeleton-card {
+    pointer-events: none;
+}
+
+.skeleton-image {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    background: linear-gradient(90deg,
+            rgba(255, 255, 255, 0.05) 25%,
+            rgba(255, 255, 255, 0.12) 37%,
+            rgba(255, 255, 255, 0.05) 63%);
+    background-size: 400% 100%;
+    animation: skeleton-loading 1.4s ease infinite;
+}
+
+.skeleton-title {
+    height: 18px;
+    width: 70%;
+    margin-bottom: 12px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.skeleton-price {
+    height: 16px;
+    width: 40%;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+@keyframes skeleton-loading {
+    0% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0 50%;
     }
 }
 </style>

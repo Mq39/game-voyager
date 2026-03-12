@@ -5,6 +5,7 @@ import Cart from '@/views/Cart.vue'
 import Discover from '@/views/Discover.vue'
 import Home from '@/views/Home.vue'
 import Login from '@/views/Login.vue'
+import Register from '@/views/Register.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 
 const router = createRouter({
@@ -37,7 +38,13 @@ const router = createRouter({
     {
       path: '/login',
       component: Login,
-      meta: { title: 'Login', breadcrumb: 'Home' }
+      meta: { title: 'Login', breadcrumb: 'Login' }
+    },
+
+    {
+      path: '/register',
+      component: Register,
+      meta: { title: 'Register', breadcrumb: 'Register' }
     }
 
   ],
