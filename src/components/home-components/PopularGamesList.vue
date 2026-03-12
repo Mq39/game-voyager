@@ -82,6 +82,8 @@ const scrollToPage = (page: number, behavior: ScrollBehavior = 'smooth') => {
 }
 
 const scrollByPage = (direction: 'left' | 'right') => {
+    if (loading.value) return
+
     const nextPage =
         direction === 'right'
             ? currentPage.value + 1
@@ -159,8 +161,7 @@ onBeforeUnmount(() => {
 
 
             <!-- Real cards once data loads -->
-            <RouterLink v-else v-for="game in games" :key="game.id" :to="`/browse?game=${game.id}`"
-                class="popular-game-card">
+            <RouterLink v-else v-for="game in games" :key="game.id" :to="`/games/${game.id}`" class="popular-game-card">
                 <div class="popular-game-image-wrap">
                     <img :src="game.image" :alt="game.title" class="popular-game-image" />
 

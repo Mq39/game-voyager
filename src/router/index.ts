@@ -1,8 +1,7 @@
-import App from '@/App.vue'
-import Breadcrumbs from '@/components/layout/MainLayout-components/Breadcrumbs.vue'
 import Browse from '@/views/Browse.vue'
 import Cart from '@/views/Cart.vue'
 import Discover from '@/views/Discover.vue'
+import Game from '@/views/Game.vue'
 import Home from '@/views/Home.vue'
 import Login from '@/views/Login.vue'
 import Register from '@/views/Register.vue'
@@ -10,6 +9,9 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  scrollBehavior() {
+    return { top: 0, behavior: 'smooth' }
+  },
   routes: [
     {
       path: '/',
@@ -45,15 +47,16 @@ const router = createRouter({
       path: '/register',
       component: Register,
       meta: { title: 'Register', breadcrumb: 'Register' }
-    }
+    },
+
+    {
+      path: '/games/:id',
+      component: Game,
+      meta: { title: "Game Details", breadcrumb: "Game" }
+    },
 
   ],
 })
 
-router.afterEach((to) => {
-  if (to.meta.title) {
-    document.title = `${to.meta.title}`
-  }
-})
 
 export default router

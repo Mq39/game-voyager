@@ -10,7 +10,7 @@ const year = new Date().getFullYear()
                     <div class="footer-brand-block">
                         <h2 class="footer-brand">GameVoyager</h2>
                         <p class="footer-lead">
-                            Discover trending titles, compare offers, explore new releases,
+                            Discover trending titles, explore new releases,
                             and find your next favorite game in one place.
                         </p>
                         <p class="footer-subtext">
