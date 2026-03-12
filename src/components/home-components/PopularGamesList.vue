@@ -146,52 +146,50 @@ onBeforeUnmount(() => {
         </div>
 
         <div ref="scrollContainer" class="popular-scroll-row">
-            <div ref="scrollContainer" class="popular-scroll-row">
 
-                <!-- Skeleton cards while loading -->
-                <div v-if="loading" v-for="n in 10" :key="'skeleton-' + n" class="popular-game-card skeleton-card">
-                    <div class="skeleton-image"></div>
+            <!-- Skeleton cards while loading -->
+            <div v-if="loading" v-for="n in 10" :key="'skeleton-' + n" class="popular-game-card skeleton-card">
+                <div class="skeleton-image"></div>
 
-                    <div class="popular-game-body">
-                        <div class="skeleton-title"></div>
-                        <div class="skeleton-price"></div>
+                <div class="popular-game-body">
+                    <div class="skeleton-title"></div>
+                    <div class="skeleton-price"></div>
+                </div>
+            </div>
+
+
+            <!-- Real cards once data loads -->
+            <RouterLink v-else v-for="game in games" :key="game.id" :to="`/browse?game=${game.id}`"
+                class="popular-game-card">
+                <div class="popular-game-image-wrap">
+                    <img :src="game.image" :alt="game.title" class="popular-game-image" />
+
+                    <div class="popular-rank-badge">
+                        #{{ game.rank }}
+                    </div>
+
+                    <div v-if="game.badge" class="popular-status-badge">
+                        {{ game.badge }}
                     </div>
                 </div>
 
+                <div class="popular-game-body">
+                    <h3 class="popular-game-title">
+                        {{ game.title }}
+                    </h3>
 
-                <!-- Real cards once data loads -->
-                <RouterLink v-else v-for="game in games" :key="game.id" :to="`/browse?game=${game.id}`"
-                    class="popular-game-card">
-                    <div class="popular-game-image-wrap">
-                        <img :src="game.image" :alt="game.title" class="popular-game-image" />
+                    <div class="popular-price-block">
+                        <span v-if="game.oldPrice" class="popular-old-price">
+                            {{ formatPrice(game.oldPrice) }}
+                        </span>
 
-                        <div class="popular-rank-badge">
-                            #{{ game.rank }}
-                        </div>
-
-                        <div v-if="game.badge" class="popular-status-badge">
-                            {{ game.badge }}
-                        </div>
+                        <span class="popular-price">
+                            {{ formatPrice(game.price) }}
+                        </span>
                     </div>
+                </div>
+            </RouterLink>
 
-                    <div class="popular-game-body">
-                        <h3 class="popular-game-title">
-                            {{ game.title }}
-                        </h3>
-
-                        <div class="popular-price-block">
-                            <span v-if="game.oldPrice" class="popular-old-price">
-                                {{ formatPrice(game.oldPrice) }}
-                            </span>
-
-                            <span class="popular-price">
-                                {{ formatPrice(game.price) }}
-                            </span>
-                        </div>
-                    </div>
-                </RouterLink>
-
-            </div>
         </div>
     </section>
 </template>
