@@ -2,7 +2,7 @@
 import { ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import type { Game } from "@/models/game.model"
-import { searchGames } from "@/services/gameService.ts"
+import { searchGames } from "@/services/game.service.ts"
 import logo from "@/assets/GameVoyagerLogo.png"
 
 const router = useRouter()
