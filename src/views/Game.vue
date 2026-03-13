@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, onBeforeUnmount } from "vue"
+import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue"
 import { useRoute } from "vue-router"
 import axios from "axios"
 import MainLayout from "@/components/layout/MainLayout.vue"
@@ -145,9 +145,16 @@ const handleKeydown = (event: KeyboardEvent) => {
     }
 }
 
-const fetchGame = async () => {
+const fetchGame = async (id: string) => {
     try {
-        const id = route.params.id as string
+        loading.value = true
+        error.value = ""
+        game.value = null
+        screenshots.value = []
+        movies.value = []
+        selectedIndex.value = 0
+        activeTab.value = "description"
+        hoveredTrailerIndex.value = null
 
         const [gameResponse, screenshotsResponse, moviesResponse] = await Promise.all([
             axios.get(`https://game-voyager-backend.vercel.app/api/games/${id}`),
@@ -156,10 +163,9 @@ const fetchGame = async () => {
         ])
 
         game.value = gameResponse.data
-        document.title = `${game.value?.title} | Game Details`
         screenshots.value = screenshotsResponse.data
         movies.value = moviesResponse.data
-        selectedIndex.value = 0
+        document.title = `${game.value?.title} | Game Details`
     } catch (err) {
         console.error("Failed to fetch game:", err)
         error.value = "Failed to load game."
@@ -168,8 +174,17 @@ const fetchGame = async () => {
     }
 }
 
+watch(
+    () => route.params.id,
+    (newId) => {
+        if (typeof newId === "string" && newId.trim()) {
+            void fetchGame(newId)
+        }
+    },
+    { immediate: true }
+)
+
 onMounted(() => {
-    fetchGame()
     window.addEventListener("keydown", handleKeydown)
 })
 

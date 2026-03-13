@@ -1,30 +1,21 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue"
+import { ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
+import type { Game } from "@/models/game.model"
+import { searchGames } from "@/services/gameService.ts"
 import logo from "@/assets/GameVoyagerLogo.png"
 
 const router = useRouter()
 const route = useRoute()
 
-const searchQuery = ref("")
-const isOpen = ref(false)
+const searchQuery = ref<string>("")
+const isOpen = ref<boolean>(false)
+const isLoading = ref<boolean>(false)
+const searchError = ref<string>("")
+const suggestions = ref<Game[]>([])
 
-type SearchSuggestion = {
-    id: number
-    title: string
-    image: string
-}
-
-const mockSuggestions: SearchSuggestion[] = [
-    { id: 1, title: "Elden Ring", image: logo },
-    { id: 2, title: "Cyberpunk 2077", image: logo },
-    { id: 3, title: "Red Dead Redemption 2", image: logo },
-    { id: 4, title: "Baldur's Gate 3", image: logo },
-    { id: 5, title: "Hades", image: logo },
-    { id: 6, title: "Hollow Knight", image: logo },
-    { id: 7, title: "Dead Cells", image: logo },
-    { id: 8, title: "Disco Elysium", image: logo }
-]
+let debounceTimer: ReturnType<typeof setTimeout> | null = null
+let latestRequest = 0
 
 watch(
     () => route.query.search,
@@ -34,47 +25,76 @@ watch(
     { immediate: true }
 )
 
-const filteredSuggestions = computed(() => {
-    const query = searchQuery.value.trim().toLowerCase()
+watch(searchQuery, (newValue: string) => {
+    const trimmed = newValue.trim()
 
-    if (!query) return []
+    searchError.value = ""
 
-    return mockSuggestions
-        .filter((game) => game.title.toLowerCase().includes(query))
-        .slice(0, 6)
+    if (debounceTimer) {
+        clearTimeout(debounceTimer)
+    }
+
+    if (!trimmed) {
+        suggestions.value = []
+        isOpen.value = false
+        isLoading.value = false
+        return
+    }
+
+    debounceTimer = setTimeout(async () => {
+        const requestId = ++latestRequest
+
+        try {
+            isLoading.value = true
+
+            const results = await searchGames(trimmed, 6)
+
+            if (requestId !== latestRequest) return
+
+            suggestions.value = results
+            isOpen.value = true
+        } catch (error) {
+            console.error("Failed to fetch search suggestions:", error)
+
+            if (requestId !== latestRequest) return
+
+            suggestions.value = []
+            isOpen.value = false
+            searchError.value = "Failed to load suggestions"
+        } finally {
+            if (requestId === latestRequest) {
+                isLoading.value = false
+            }
+        }
+    }, 350)
 })
 
-const submitSearch = () => {
+const submitSearch = async (): Promise<void> => {
     const trimmed = searchQuery.value.trim()
     isOpen.value = false
 
-    router.push({
+    await router.push({
         path: "/browse",
         query: trimmed ? { search: trimmed } : {}
     })
 }
 
-const selectSuggestion = (suggestion: SearchSuggestion) => {
-    searchQuery.value = suggestion.title
+const selectSuggestion = async (suggestion: Game): Promise<void> => {
     isOpen.value = false
+    searchQuery.value = ""
 
-    router.push({
-        path: "/browse",
-        query: { search: suggestion.title }
+    await router.push({
+        path: `/games/${suggestion.id}`
     })
 }
 
-const handleFocus = () => {
-    if (filteredSuggestions.value.length > 0) {
+const handleFocus = (): void => {
+    if (suggestions.value.length > 0) {
         isOpen.value = true
     }
 }
 
-const handleInput = () => {
-    isOpen.value = filteredSuggestions.value.length > 0
-}
-
-const handleBlur = () => {
+const handleBlur = (): void => {
     setTimeout(() => {
         isOpen.value = false
     }, 150)
@@ -88,19 +108,32 @@ const handleBlur = () => {
                 <i class="fa-solid fa-magnifying-glass search-icon"></i>
 
                 <input v-model="searchQuery" type="text" class="form-control search-input" placeholder="Search games..."
-                    aria-label="Search games" autocomplete="off" @focus="handleFocus" @input="handleInput"
-                    @blur="handleBlur" />
+                    aria-label="Search games" autocomplete="off" @focus="handleFocus" @blur="handleBlur"
+                    @keydown.esc="isOpen = false" />
 
-                <ul v-if="isOpen && filteredSuggestions.length" class="search-dropdown">
-                    <li v-for="suggestion in filteredSuggestions" :key="suggestion.id" class="search-dropdown-item"
+                <ul v-if="isOpen && suggestions.length" class="search-dropdown">
+                    <li v-for="suggestion in suggestions" :key="suggestion.id" class="search-dropdown-item"
                         @mousedown.prevent="selectSuggestion(suggestion)">
-                        <img :src="suggestion.image" :alt="suggestion.title" class="search-game-thumb" />
+                        <img :src="suggestion.image || logo" :alt="suggestion.title" class="search-game-thumb" />
 
                         <span class="search-game-title">
                             {{ suggestion.title }}
                         </span>
                     </li>
                 </ul>
+
+                <div v-else-if="isOpen && !isLoading && searchQuery.trim() && !suggestions.length"
+                    class="search-status">
+                    No games found.
+                </div>
+
+                <div v-if="isLoading" class="search-status">
+                    Loading...
+                </div>
+
+                <div v-else-if="searchError" class="search-status text-danger">
+                    {{ searchError }}
+                </div>
             </div>
         </form>
     </div>
@@ -197,5 +230,18 @@ const handleBlur = () => {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+}
+
+.search-status {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    padding: 12px 16px;
+    border-radius: 16px;
+    background: #171a24;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.75);
+    z-index: 20;
 }
 </style>
