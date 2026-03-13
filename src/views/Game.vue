@@ -4,6 +4,11 @@ import { useRoute } from "vue-router"
 import axios from "axios"
 import MainLayout from "@/components/layout/MainLayout.vue"
 
+type BreadcrumbItem = {
+    label: string
+    to?: string
+}
+
 type GameDetails = {
     id: number
     title: string
@@ -145,6 +150,39 @@ const handleKeydown = (event: KeyboardEvent) => {
     }
 }
 
+const updateBreadcrumbs = (items: BreadcrumbItem[]) => {
+    window.dispatchEvent(
+        new CustomEvent<BreadcrumbItem[]>("set-breadcrumbs", {
+            detail: items
+        })
+    )
+}
+
+const setGameBreadcrumbs = (gameData: GameDetails | null) => {
+    if (!gameData) {
+        updateBreadcrumbs([{ label: "Game" }])
+        return
+    }
+
+    const primaryGenre = gameData.genres?.[0]
+
+    const breadcrumbItems: BreadcrumbItem[] = [
+        ...(primaryGenre
+            ? [
+                {
+                    label: primaryGenre,
+                    to: `/browse?genre=${encodeURIComponent(primaryGenre)}`
+                }
+            ]
+            : []),
+        {
+            label: gameData.title
+        }
+    ]
+
+    updateBreadcrumbs(breadcrumbItems)
+}
+
 const fetchGame = async (id: string) => {
     try {
         loading.value = true
@@ -155,6 +193,7 @@ const fetchGame = async (id: string) => {
         selectedIndex.value = 0
         activeTab.value = "description"
         hoveredTrailerIndex.value = null
+        setGameBreadcrumbs(null)
 
         const [gameResponse, screenshotsResponse, moviesResponse] = await Promise.all([
             axios.get(`https://game-voyager-backend.vercel.app/api/games/${id}`),
@@ -165,10 +204,14 @@ const fetchGame = async (id: string) => {
         game.value = gameResponse.data
         screenshots.value = screenshotsResponse.data
         movies.value = moviesResponse.data
+
+        setGameBreadcrumbs(game.value)
+
         document.title = `${game.value?.title} | Game Details`
     } catch (err) {
         console.error("Failed to fetch game:", err)
         error.value = "Failed to load game."
+        setGameBreadcrumbs(null)
     } finally {
         loading.value = false
     }
@@ -190,6 +233,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
     window.removeEventListener("keydown", handleKeydown)
+    updateBreadcrumbs([])
 })
 </script>
 

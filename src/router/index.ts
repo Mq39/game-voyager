@@ -52,11 +52,20 @@ const router = createRouter({
     {
       path: '/games/:id',
       component: Game,
-      meta: { title: "Game Details", breadcrumb: "Game" }
+      meta: { title: "Game Details", breadcrumb: [] }
     },
 
   ],
 })
 
+router.afterEach((to) => {
+  const defaultTitle = "Game Voyager"
+
+  if (typeof to.meta.title === "string" && to.meta.title.trim()) {
+    document.title = to.meta.title
+  } else {
+    document.title = defaultTitle
+  }
+})
 
 export default router
