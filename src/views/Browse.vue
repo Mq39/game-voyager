@@ -5,7 +5,6 @@ import axios from "axios"
 import MainLayout from "@/components/layout/MainLayout.vue"
 import type { Game } from "@/models/game.model"
 import { browseGames } from "@/services/game.service"
-import { Router } from "express"
 
 type BrowseGamesResponse = {
     results: Game[]
