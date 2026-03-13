@@ -9,8 +9,8 @@ const currentPage = ref(0)
 const loading = ref(true)
 
 const formatPrice = (value: number | undefined) => {
-    if (value == null) return "N/A"
-    return `€${value.toFixed(2)}`
+    if (value != null)
+        return `€${value.toFixed(2)}`
 }
 
 const getItemsPerScroll = () => {

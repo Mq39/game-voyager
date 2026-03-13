@@ -5,6 +5,7 @@ import axios from "axios"
 import MainLayout from "@/components/layout/MainLayout.vue"
 import type { Game } from "@/models/game.model"
 import { browseGames } from "@/services/game.service"
+import { Router } from "express"
 
 type BrowseGamesResponse = {
     results: Game[]
@@ -29,6 +30,8 @@ type GamePreviewDetails = {
 const route = useRoute()
 const router = useRouter()
 
+const isLoggedIn = ref<boolean>(false)
+
 const games = ref<Game[]>([])
 const loading = ref<boolean>(false)
 const loadingMore = ref<boolean>(false)
@@ -47,6 +50,7 @@ const hasMore = ref<boolean>(true)
 const activePreviewGame = ref<Game | null>(null)
 const previewDetails = ref<GamePreviewDetails | null>(null)
 const previewLoading = ref<boolean>(false)
+const activeFilter = ref<string>("")
 
 let previewRequestId = 0
 
@@ -80,8 +84,22 @@ const sortOptions = [
 
 const totalLoaded = computed(() => games.value.length)
 
+
+const addToCart = (game: Game): void => {
+    console.log("Add to cart:", game)
+}
+
+const toggleWishlist = (game: Game): void => {
+    if (!isLoggedIn.value) {
+        alert("You must be logged in to wishlist a game!")
+        return
+    }
+
+    console.log("Toggle wishlist:", game)
+}
+
 const syncFromRoute = (): void => {
-    search.value = typeof route.query.search === "string" ? route.query.search : ""
+    search.value = typeof route.query.browseSearch === "string" ? route.query.browseSearch : ""
     genre.value = typeof route.query.genre === "string" ? route.query.genre : ""
     platform.value = typeof route.query.platform === "string" ? route.query.platform : ""
     ordering.value = typeof route.query.ordering === "string" ? route.query.ordering : "-added"
@@ -190,7 +208,7 @@ const applyFilters = async (): Promise<void> => {
     await router.push({
         path: "/browse",
         query: {
-            ...(search.value ? { search: search.value } : {}),
+            ...(search.value ? { browseSearch: search.value } : {}),
             ...(genre.value ? { genre: genre.value } : {}),
             ...(platform.value ? { platform: platform.value } : {}),
             ...(ordering.value ? { ordering: ordering.value } : {})
@@ -218,6 +236,22 @@ const onHoverGame = async (game: Game): Promise<void> => {
     activePreviewGame.value = game
     await loadPreviewDetails(game)
 }
+
+const applyRouteFilter = () => {
+    const filter = route.query.filter
+
+    if (typeof filter === "string") {
+        activeFilter.value = filter
+    } else {
+        activeFilter.value = ""
+    }
+}
+
+watch(
+    () => route.query,
+    () => applyRouteFilter(),
+    { immediate: true }
+)
 
 watch(
     () => route.query,
@@ -287,8 +321,8 @@ onBeforeUnmount(() => {
                 </div>
             </div>
 
-            <div v-if="loading" class="browse-state">
-                Loading games...
+            <div v-if="loading" class="browse-loading">
+                <div class="voyager-spinner" role="status" aria-label="Loading games"></div>
             </div>
 
             <div v-else-if="error" class="browse-state browse-error">
@@ -306,8 +340,9 @@ onBeforeUnmount(() => {
 
                 <div class="browse-layout">
                     <div class="browse-list">
-                        <article v-for="game in games" :key="game.id" class="browse-list-item"
-                            :class="{ active: activePreviewGame?.id === game.id }" @mouseenter="onHoverGame(game)">
+                        <RouterLink v-for="game in games" :key="game.id" :to="`/games/${game.id}`"
+                            class="browse-list-item" :class="{ active: activePreviewGame?.id === game.id }"
+                            @mouseenter="onHoverGame(game)">
                             <div class="browse-list-thumb-wrap">
                                 <img :src="game.image" :alt="game.title" class="browse-list-thumb" />
                             </div>
@@ -323,16 +358,19 @@ onBeforeUnmount(() => {
                                 </div>
                             </div>
 
-                            <div class="browse-list-side">
-                                <div class="browse-list-score">
-                                    {{ game.rating ?? "N/A" }}
-                                </div>
+                            <div class="browse-list-actions">
+                                <button class="browse-action-btn browse-action-btn-cart"
+                                    @click.prevent.stop="addToCart(game)" aria-label="Add to cart" type="button">
+                                    Add to Cart
+                                </button>
 
-                                <RouterLink :to="`/games/${game.id}`" class="browse-list-link">
-                                    View Details
-                                </RouterLink>
+                                <button class="browse-action-btn browse-action-btn-star"
+                                    @click.prevent.stop="toggleWishlist(game)" aria-label="Add to wishlist"
+                                    type="button">
+                                    ★
+                                </button>
                             </div>
-                        </article>
+                        </RouterLink>
                     </div>
 
                     <aside class="preview-column">
@@ -407,8 +445,8 @@ onBeforeUnmount(() => {
                     </aside>
                 </div>
 
-                <div v-if="loadingMore" class="browse-state">
-                    Loading more games...
+                <div v-if="loadingMore" class="browse-loading">
+                    <div class="voyager-spinner" role="status" aria-label="Loading games"></div>
                 </div>
 
                 <div v-else-if="!hasMore" class="browse-state browse-end">
@@ -461,6 +499,12 @@ onBeforeUnmount(() => {
     color: white;
 }
 
+.filter-input option {
+    background: #1b1d2b;
+    color: white;
+}
+
+
 .filter-input:focus {
     background: rgba(255, 255, 255, 0.08);
     border-color: rgba(124, 92, 255, 0.65);
@@ -512,11 +556,52 @@ onBeforeUnmount(() => {
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 0;
     transition: background-color 0.16s ease;
+    text-decoration: none;
+    color: inherit;
 }
 
 .browse-list-item:hover,
 .browse-list-item.active {
     background: rgba(255, 255, 255, 0.08);
+}
+
+.browse-list-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0 1rem 0 0;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.browse-action-btn {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.06);
+    color: white;
+    height: 42px;
+    border-radius: 999px;
+    transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+}
+
+.browse-action-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+.browse-action-btn-cart {
+    padding: 0 1rem;
+    min-width: 124px;
+    font-weight: 700;
+}
+
+.browse-action-btn-star {
+    width: 42px;
+    min-width: 42px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
 }
 
 .browse-list-thumb-wrap {
@@ -795,6 +880,29 @@ onBeforeUnmount(() => {
 
     .browse-list-link {
         width: 100%;
+    }
+}
+
+.browse-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 320px;
+}
+
+.voyager-spinner {
+    width: 3rem;
+    height: 3rem;
+    border: 0.35rem solid rgba(255, 255, 255, 0.15);
+    border-top-color: #a855f7;
+    border-radius: 50%;
+    animation: voyager-spin 0.8s linear infinite;
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.35);
+}
+
+@keyframes voyager-spin {
+    to {
+        transform: rotate(360deg);
     }
 }
 </style>

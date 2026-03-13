@@ -11,7 +11,7 @@ import Hero from '../components/home-components/Hero.vue'
         <section class="promo-section container mt-4">
             <div class="row g-3">
                 <div class="col-12 col-md-4">
-                    <RouterLink to="/browse?filter=popular" class="promo-card promo-popular">
+                    <RouterLink to="/browse?ordering=-rating" class="promo-card promo-popular">
                         <div class="promo-backdrop"></div>
                         <div class="promo-glow"></div>
 
@@ -26,22 +26,22 @@ import Hero from '../components/home-components/Hero.vue'
                 </div>
 
                 <div class="col-12 col-md-4">
-                    <RouterLink to="/browse?filter=sale" class="promo-card promo-featured">
+                    <RouterLink to="/browse?ordering=-metacritic" class="promo-card promo-featured">
                         <div class="promo-backdrop"></div>
                         <div class="promo-glow"></div>
 
                         <div class="promo-content">
-                            <span class="promo-tag">Limited time</span>
-                            <h3 class="promo-heading">Flash Deals</h3>
+                            <span class="promo-tag">Metacritic</span>
+                            <h3 class="promo-heading">Highest rated</h3>
                             <p class="promo-description">
-                                Grab discounted games and bundles before the offers disappear.
+                                Take a look a the best criticaly aclaimed games.
                             </p>
                         </div>
                     </RouterLink>
                 </div>
 
                 <div class="col-12 col-md-4">
-                    <RouterLink to="/browse?filter=new" class="promo-card promo-new">
+                    <RouterLink to="/browse?ordering=-released" class="promo-card promo-new">
                         <div class="promo-backdrop"></div>
                         <div class="promo-glow"></div>
 
