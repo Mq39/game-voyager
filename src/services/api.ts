@@ -2,7 +2,7 @@ import axios from "axios"
 import { getToken } from "./authentication.service"
 
 export const api = axios.create({
-    baseURL: "https://game-voyager-backend.vercel.app/"
+    baseURL: "https://game-voyager-backend.vercel.app/api"
 })
 
 api.interceptors.request.use((config) => {

@@ -1,7 +1,6 @@
 import type { Game } from "@/models/game.model"
 import axios from "axios"
 
-const API_BASE_URL = "https://game-voyager-backend.vercel.app/"
 
 type BrowseGamesParams = {
     search?: string
