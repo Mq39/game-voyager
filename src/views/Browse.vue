@@ -165,7 +165,7 @@ const loadPreviewDetails = async (game: Game): Promise<void> => {
         previewLoading.value = true
 
         const response = await axios.get<GamePreviewDetails>(
-            `http://localhost:4000/api/games/${game.id}`
+            `https://game-voyager-backend.vercel.app/api/games/${game.id}`
         )
 
         if (requestId !== previewRequestId) return

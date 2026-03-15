@@ -285,9 +285,9 @@ const fetchGame = async (id: string) => {
         setGameBreadcrumbs(null)
 
         const [gameResponse, screenshotsResponse, moviesResponse] = await Promise.all([
-            axios.get(`http://localhost:4000/api/games/${id}`),
-            axios.get(`http://localhost:4000/api/games/${id}/screenshots`),
-            axios.get(`http://localhost:4000/api/games/${id}/movies`)
+            axios.get(`https://game-voyager-backend.vercel.app/api/games/${id}`),
+            axios.get(`https://game-voyager-backend.vercel.app/api/games/${id}/screenshots`),
+            axios.get(`https://game-voyager-backend.vercel.app/api/games/${id}/movies`)
         ])
 
         game.value = gameResponse.data

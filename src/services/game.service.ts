@@ -1,7 +1,7 @@
 import type { Game } from "@/models/game.model"
 import axios from "axios"
 
-const API_BASE_URL = "http://localhost:4000"
+const API_BASE_URL = "https://game-voyager-backend.vercel.app/"
 
 type BrowseGamesParams = {
     search?: string
@@ -22,7 +22,7 @@ export const browseGames = async (
     params: BrowseGamesParams
 ): Promise<BrowseGamesResponse> => {
     const response = await axios.get<BrowseGamesResponse>(
-        "http://localhost:4000/api/games/browse",
+        "https://game-voyager-backend.vercel.app/api/games/browse",
         { params }
     )
 
@@ -35,7 +35,7 @@ export const searchGames = async (
     pageSize = 6
 ): Promise<Game[]> => {
     const response = await axios.get<Game[]>(
-        "http://localhost:4000/api/games/search",
+        "https://game-voyager-backend.vercel.app/api/games/search",
         {
             params: {
                 query,
@@ -48,6 +48,6 @@ export const searchGames = async (
 }
 
 export const getRandomGame = async (): Promise<{ id: number; title: string }> => {
-    const response = await axios.get("http://localhost:4000/api/games/random")
+    const response = await axios.get("https://game-voyager-backend.vercel.app/api/games/random")
     return response.data
 }

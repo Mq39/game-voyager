@@ -98,7 +98,7 @@ const handleResize = () => {
 
 const fetchPopularGames = async () => {
     try {
-        const response = await axios.get("http://localhost:4000/api/games/popular")
+        const response = await axios.get("https://game-voyager-backend.vercel.app/api/games/popular")
         games.value = response.data
     } catch (error) {
         console.error("Failed to fetch popular games:", error)
