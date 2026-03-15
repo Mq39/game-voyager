@@ -3,6 +3,10 @@ import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue"
 import { useRoute } from "vue-router"
 import axios from "axios"
 import MainLayout from "@/components/layout/MainLayout.vue"
+import { useCart } from "@/composable/useCart"
+import { addToWishlist, getWishlist, removeFromWishlist } from "@/services/wishlist.service"
+import { showSuccessToast, showInfoToast, showAuthRequiredToast } from "@/utils/alerts"
+import { useAuth } from "@/composable/useAuthentication"
 
 type BreadcrumbItem = {
     label: string
@@ -54,6 +58,8 @@ type MediaItem =
 
 const route = useRoute()
 
+const { isAuthenticated } = useAuth()
+
 const game = ref<GameDetails | null>(null)
 const screenshots = ref<Screenshot[]>([])
 const movies = ref<Movie[]>([])
@@ -64,7 +70,15 @@ const activeTab = ref("description")
 const hoveredTrailerIndex = ref<number | null>(null)
 const mainVideoRef = ref<HTMLVideoElement | null>(null)
 
+const wishlistedIds = ref<number[]>([])
+const { addToCart } = useCart()
+
 const gameData = computed(() => game.value)
+
+const isWishlisted = computed(() => {
+    if (!game.value?.id) return false
+    return wishlistedIds.value.includes(game.value.id)
+})
 
 const mediaItems = computed<MediaItem[]>(() => {
     if (!game.value) return []
@@ -158,6 +172,23 @@ const updateBreadcrumbs = (items: BreadcrumbItem[]) => {
     )
 }
 
+const mapGenreToBrowseValue = (genre: string): string => {
+    const normalized = genre.trim().toLowerCase()
+
+    const genreMap: Record<string, string> = {
+        action: "action",
+        rpg: "role-playing-games-rpg",
+        shooter: "shooter",
+        adventure: "adventure",
+        strategy: "strategy",
+        puzzle: "puzzle",
+        sports: "sports",
+        racing: "racing"
+    }
+
+    return genreMap[normalized] ?? normalized.replace(/\s+/g, "-")
+}
+
 const setGameBreadcrumbs = (gameData: GameDetails | null) => {
     if (!gameData) {
         updateBreadcrumbs([{ label: "Game" }])
@@ -171,7 +202,7 @@ const setGameBreadcrumbs = (gameData: GameDetails | null) => {
             ? [
                 {
                     label: primaryGenre,
-                    to: `/browse?genre=${encodeURIComponent(primaryGenre)}`
+                    to: `/browse?genre=${encodeURIComponent(mapGenreToBrowseValue(primaryGenre))}`
                 }
             ]
             : []),
@@ -181,6 +212,64 @@ const setGameBreadcrumbs = (gameData: GameDetails | null) => {
     ]
 
     updateBreadcrumbs(breadcrumbItems)
+}
+
+const loadWishlist = async (): Promise<void> => {
+    try {
+        const items = await getWishlist()
+        wishlistedIds.value = items.map((item) => item.gameId)
+    } catch (error) {
+        console.error("Failed to load wishlist:", error)
+    }
+}
+
+const handleAddToCart = async (): Promise<void> => {
+    if (!isAuthenticated.value) {
+        showAuthRequiredToast("You must be logged in to add a game to cart.")
+        return
+    }
+
+    if (!game.value) return
+
+    try {
+        await addToCart({
+            id: game.value.id,
+            title: game.value.title,
+            image: game.value.background ?? null
+        })
+
+        showSuccessToast("Added to cart")
+    } catch (error) {
+        console.error("Failed to add to cart:", error)
+    }
+}
+
+
+const toggleWishlist = async (): Promise<void> => {
+    if (!isAuthenticated.value) {
+        showAuthRequiredToast("You must be logged in to add a game to wishlist.")
+        return
+    }
+
+    if (!game.value) return
+
+    try {
+        if (wishlistedIds.value.includes(game.value.id)) {
+            await removeFromWishlist(game.value.id)
+            wishlistedIds.value = wishlistedIds.value.filter((id) => id !== game.value!.id)
+            showInfoToast("Removed from wishlist")
+        } else {
+            await addToWishlist({
+                id: game.value.id,
+                title: game.value.title,
+                image: game.value.background ?? null
+            })
+            wishlistedIds.value.push(game.value.id)
+            showSuccessToast("Added to wishlist")
+        }
+    } catch (error) {
+        console.error("Failed to toggle wishlist:", error)
+    }
 }
 
 const fetchGame = async (id: string) => {
@@ -196,9 +285,9 @@ const fetchGame = async (id: string) => {
         setGameBreadcrumbs(null)
 
         const [gameResponse, screenshotsResponse, moviesResponse] = await Promise.all([
-            axios.get(`https://game-voyager-backend.vercel.app/api/games/${id}`),
-            axios.get(`https://game-voyager-backend.vercel.app/api/games/${id}/screenshots`),
-            axios.get(`https://game-voyager-backend.vercel.app/api/games/${id}/movies`)
+            axios.get(`http://localhost:4000/api/games/${id}`),
+            axios.get(`http://localhost:4000/api/games/${id}/screenshots`),
+            axios.get(`http://localhost:4000/api/games/${id}/movies`)
         ])
 
         game.value = gameResponse.data
@@ -219,9 +308,12 @@ const fetchGame = async (id: string) => {
 
 watch(
     () => route.params.id,
-    (newId) => {
+    async (newId) => {
         if (typeof newId === "string" && newId.trim()) {
-            void fetchGame(newId)
+            await Promise.all([
+                fetchGame(newId),
+                loadWishlist()
+            ])
         }
     },
     { immediate: true }
@@ -346,9 +438,17 @@ onBeforeUnmount(() => {
                                 <span class="price-value">{{ gameData.rating }}</span>
                             </div>
 
-                            <button class="buy-btn" type="button">
-                                Add to cart
-                            </button>
+                            <div class="game-actions">
+                                <button class="game-action-btn game-action-btn-cart" @click="handleAddToCart"
+                                    type="button">
+                                    Add to Cart
+                                </button>
+
+                                <button class="game-action-btn game-action-btn-star" :class="{ active: isWishlisted }"
+                                    @click="toggleWishlist" type="button">
+                                    ★
+                                </button>
+                            </div>
 
                             <div class="purchase-meta">
                                 <p><strong>Release date:</strong> {{ gameData.released }}</p>
@@ -600,21 +700,56 @@ onBeforeUnmount(() => {
     color: #25e28a;
 }
 
-.buy-btn {
-    width: 100%;
+.game-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
     margin-top: 0.75rem;
-    border: none;
-    border-radius: 999px;
-    padding: 0.95rem 1rem;
-    font-weight: 700;
-    color: white;
-    background: #ff9b2f;
-    transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-.buy-btn:hover {
+.game-action-btn {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.06);
+    color: white;
+    min-height: 46px;
+    border-radius: 999px;
+    transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+}
+
+.game-action-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+.game-action-btn-cart {
+    flex: 1;
+    padding: 0 1.1rem;
+    font-weight: 700;
+    background: #ff9b2f;
+    border-color: transparent;
+}
+
+.game-action-btn-cart:hover {
     transform: translateY(-1px);
     box-shadow: 0 10px 20px rgba(255, 155, 47, 0.25);
+    background: #ff9b2f;
+}
+
+.game-action-btn-star {
+    width: 46px;
+    min-width: 46px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+}
+
+.game-action-btn-star.active {
+    color: #ffd966;
+    border-color: rgba(255, 217, 102, 0.35);
+    background: rgba(255, 217, 102, 0.12);
+    box-shadow: 0 0 14px rgba(255, 217, 102, 0.18);
 }
 
 .purchase-meta {

@@ -13,7 +13,7 @@ const loading = ref(true)
 
 const fetchHeroGames = async () => {
     try {
-        const response = await axios.get("https://game-voyager-backend.vercel.app/api/games/hero");
+        const response = await axios.get("http://localhost:4000/api/games/hero");
         heroGames.value = response.data
     } catch (error) {
         console.error("Failed to fetch hero games:", error)

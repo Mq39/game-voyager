@@ -5,31 +5,18 @@ import axios from "axios"
 import MainLayout from "@/components/layout/MainLayout.vue"
 import type { Game } from "@/models/game.model"
 import { browseGames } from "@/services/game.service"
+import { addToWishlist, getWishlist, removeFromWishlist } from "@/services/wishlist.service"
+import { useCart } from "@/composable/useCart"
+import GameListItem from "@/components/reusables/GameListItem.vue"
+import { showSuccessToast, showInfoToast, showAuthRequiredToast } from "@/utils/alerts"
+import { useAuth } from "@/composable/useAuthentication"
 
-type BrowseGamesResponse = {
-    results: Game[]
-    count: number
-}
 
-type GamePreviewDetails = {
-    id: number
-    title: string
-    description: string
-    released: string
-    rating: number
-    background: string
-    website?: string
-    genres?: string[]
-    platforms?: string[]
-    requirements?: string | null
-    tags?: string[]
-    metacritic?: number
-}
 
 const route = useRoute()
 const router = useRouter()
 
-const isLoggedIn = ref<boolean>(false)
+const { isAuthenticated } = useAuth()
 
 const games = ref<Game[]>([])
 const loading = ref<boolean>(false)
@@ -51,7 +38,31 @@ const previewDetails = ref<GamePreviewDetails | null>(null)
 const previewLoading = ref<boolean>(false)
 const activeFilter = ref<string>("")
 
+const wishlistedIds = ref<number[]>([])
+const { addToCart } = useCart()
+
 let previewRequestId = 0
+
+
+type BrowseGamesResponse = {
+    results: Game[]
+    count: number
+}
+
+type GamePreviewDetails = {
+    id: number
+    title: string
+    description: string
+    released: string
+    rating: number
+    background: string
+    website?: string
+    genres?: string[]
+    platforms?: string[]
+    requirements?: string | null
+    tags?: string[]
+    metacritic?: number
+}
 
 const genreOptions = [
     { label: "All Genres", value: "" },
@@ -84,17 +95,60 @@ const sortOptions = [
 const totalLoaded = computed(() => games.value.length)
 
 
-const addToCart = (game: Game): void => {
-    console.log("Add to cart:", game)
-}
-
-const toggleWishlist = (game: Game): void => {
-    if (!isLoggedIn.value) {
-        alert("You must be logged in to wishlist a game!")
+const handleAddToCart = async (game: Game): Promise<void> => {
+    if (!isAuthenticated.value) {
+        showAuthRequiredToast("You must be logged in to add a game to cart.")
         return
     }
 
-    console.log("Toggle wishlist:", game)
+    try {
+        await addToCart({
+            id: game.id,
+            title: game.title,
+            image: game.image
+        })
+        showSuccessToast("Added to cart")
+    } catch (error) {
+        console.error("Failed to add to cart:", error)
+    }
+}
+
+const loadWishlist = async (): Promise<void> => {
+    try {
+        const items = await getWishlist()
+        wishlistedIds.value = items.map((item) => item.gameId)
+    } catch (error) {
+        console.error("Failed to load wishlist:", error)
+    }
+}
+
+const isWishlisted = (gameId: number): boolean => {
+    return wishlistedIds.value.includes(gameId)
+}
+
+const toggleWishlist = async (game: Game): Promise<void> => {
+    if (!isAuthenticated.value) {
+        showAuthRequiredToast("You must be logged in to add a game to wishlist.")
+        return
+    }
+
+    try {
+        if (isWishlisted(game.id)) {
+            await removeFromWishlist(game.id)
+            wishlistedIds.value = wishlistedIds.value.filter((id) => id !== game.id)
+            showInfoToast("Removed from wishlist")
+        } else {
+            await addToWishlist({
+                id: game.id,
+                title: game.title,
+                image: game.image
+            })
+            wishlistedIds.value.push(game.id)
+            showSuccessToast("Added to wishlist")
+        }
+    } catch (error) {
+        console.error("Failed to toggle wishlist:", error)
+    }
 }
 
 const syncFromRoute = (): void => {
@@ -111,7 +165,7 @@ const loadPreviewDetails = async (game: Game): Promise<void> => {
         previewLoading.value = true
 
         const response = await axios.get<GamePreviewDetails>(
-            `https://game-voyager-backend.vercel.app/api/games/${game.id}`
+            `http://localhost:4000/api/games/${game.id}`
         )
 
         if (requestId !== previewRequestId) return
@@ -261,8 +315,9 @@ watch(
     { immediate: true }
 )
 
-onMounted(() => {
+onMounted(async () => {
     window.addEventListener("scroll", handleScroll)
+    await loadWishlist()
 })
 
 onBeforeUnmount(() => {
@@ -339,37 +394,27 @@ onBeforeUnmount(() => {
 
                 <div class="browse-layout">
                     <div class="browse-list">
-                        <RouterLink v-for="game in games" :key="game.id" :to="`/games/${game.id}`"
-                            class="browse-list-item" :class="{ active: activePreviewGame?.id === game.id }"
-                            @mouseenter="onHoverGame(game)">
-                            <div class="browse-list-thumb-wrap">
-                                <img :src="game.image" :alt="game.title" class="browse-list-thumb" />
-                            </div>
-
-                            <div class="browse-list-main">
-                                <h3 class="browse-list-title">
-                                    {{ game.title }}
-                                </h3>
-
-                                <div class="browse-list-meta">
-                                    <span>⭐ {{ game.rating ?? "N/A" }}</span>
-                                    <span>{{ game.released ?? "Unknown release date" }}</span>
-                                </div>
-                            </div>
-
-                            <div class="browse-list-actions">
+                        <GameListItem v-for="game in games" :key="game.id" :item="{
+                            id: game.id,
+                            title: game.title,
+                            image: game.image,
+                            subtitleLeft: `Rating: ${game.rating ?? 'N/A'}`,
+                            subtitleRight: game.released ?? 'Unknown release date',
+                            to: `/games/${game.id}`
+                        }" :active="activePreviewGame?.id === game.id" @mouseenter="onHoverGame(game)">
+                            <template #actions>
                                 <button class="browse-action-btn browse-action-btn-cart"
-                                    @click.prevent.stop="addToCart(game)" aria-label="Add to cart" type="button">
+                                    @click.prevent.stop="handleAddToCart(game)" type="button">
                                     Add to Cart
                                 </button>
 
                                 <button class="browse-action-btn browse-action-btn-star"
-                                    @click.prevent.stop="toggleWishlist(game)" aria-label="Add to wishlist"
-                                    type="button">
+                                    :class="{ active: isWishlisted(game.id) }"
+                                    @click.prevent.stop="toggleWishlist(game)" type="button">
                                     ★
                                 </button>
-                            </div>
-                        </RouterLink>
+                            </template>
+                        </GameListItem>
                     </div>
 
                     <aside class="preview-column">
@@ -456,7 +501,7 @@ onBeforeUnmount(() => {
     </MainLayout>
 </template>
 
-<style scoped>
+<style>
 .browse-page {
     color: white;
 }
@@ -503,7 +548,6 @@ onBeforeUnmount(() => {
     color: white;
 }
 
-
 .filter-input:focus {
     background: rgba(255, 255, 255, 0.08);
     border-color: rgba(124, 92, 255, 0.65);
@@ -532,45 +576,11 @@ onBeforeUnmount(() => {
     align-items: stretch;
 }
 
-.preview-column {
-    position: relative;
-    align-self: stretch;
-    min-height: 100%;
-}
-
 .browse-list {
     display: flex;
     flex-direction: column;
     gap: 0;
     min-width: 0;
-}
-
-.browse-list-item {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    width: 100%;
-    min-height: 122px;
-    background: rgba(255, 255, 255, 0.04);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 0;
-    transition: background-color 0.16s ease;
-    text-decoration: none;
-    color: inherit;
-}
-
-.browse-list-item:hover,
-.browse-list-item.active {
-    background: rgba(255, 255, 255, 0.08);
-}
-
-.browse-list-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-    padding: 0 1rem 0 0;
-    margin-left: auto;
-    flex-shrink: 0;
 }
 
 .browse-action-btn {
@@ -603,90 +613,39 @@ onBeforeUnmount(() => {
     font-size: 1.1rem;
 }
 
-.browse-list-thumb-wrap {
-    width: 180px;
-    min-width: 180px;
-    height: 122px;
-    background: #1b1d2b;
+.browse-action-btn-star.active {
+    color: #ffd966;
+    border-color: rgba(255, 217, 102, 0.35);
+    background: rgba(255, 217, 102, 0.12);
+    box-shadow: 0 0 14px rgba(255, 217, 102, 0.18);
 }
 
-.browse-list-thumb {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
+.browse-action-btn-star:hover {
+    color: #ffd966;
 }
 
-.browse-list-main {
-    flex: 1;
-    min-width: 0;
-}
-
-.browse-list-title {
-    margin: 0 0 0.55rem;
-    font-size: 1.15rem;
-    font-weight: 800;
-    line-height: 1.3;
-    color: white;
-}
-
-.browse-list-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    color: rgba(255, 255, 255, 0.65);
-    font-size: 0.92rem;
-}
-
-.browse-list-side {
-    width: 180px;
-    min-width: 180px;
-    align-self: stretch;
-    padding: 1rem;
-    border-left: 1px solid rgba(255, 255, 255, 0.08);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-end;
-    gap: 0.75rem;
-}
-
-.browse-list-score {
-    font-size: 1.6rem;
-    font-weight: 800;
-    color: #25e28a;
-}
-
-.browse-list-link {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 132px;
-    padding: 0.72rem 1rem;
-    border-radius: 999px;
-    text-decoration: none;
-    color: white;
-    background: rgba(124, 92, 255, 0.22);
-    transition: background-color 0.16s ease;
-}
-
-.browse-list-link:hover {
-    background: rgba(124, 92, 255, 0.35);
+.browse-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 1.5rem;
+    align-items: start;
 }
 
 .preview-column {
-    position: relative;
+    position: sticky;
+    top: 96px;
+    /* adjust if your navbar is taller/shorter */
     align-self: start;
     height: fit-content;
 }
 
 .preview-card {
-    position: sticky;
-    top: 24px;
     background: #26263a;
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
     overflow: hidden;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
 }
 
 .preview-card-image {
@@ -850,35 +809,6 @@ onBeforeUnmount(() => {
 
     .preview-column {
         display: none;
-    }
-}
-
-@media (max-width: 991.98px) {
-    .browse-list-item {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .browse-list-thumb-wrap {
-        width: 100%;
-        min-width: 100%;
-        height: 200px;
-    }
-
-    .browse-list-main {
-        padding: 0 1rem;
-    }
-
-    .browse-list-side {
-        width: 100%;
-        min-width: 100%;
-        border-left: none;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-        align-items: stretch;
-    }
-
-    .browse-list-link {
-        width: 100%;
     }
 }
 

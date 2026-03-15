@@ -1,5 +1,12 @@
 <script setup lang="ts">
+import { onMounted } from "vue"
+import { useAuth } from "@/composable/useAuthentication"
 
+const { restoreAuth } = useAuth()
+
+onMounted(() => {
+  restoreAuth()
+})
 </script>
 
 <template>

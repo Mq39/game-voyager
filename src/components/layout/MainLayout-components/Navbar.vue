@@ -1,10 +1,59 @@
 <script lang="ts" setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import SearchBar from '@/components/layout/SearchBar.vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch, computed } from "vue";
+import { useRoute } from "vue-router";
+import { getStoredUser, logoutUser } from "@/services/authentication.service";
+import type { AuthUser } from "@/services/authentication.service";
+import { getCart } from "@/services/cart.service";
+import { useCart } from "@/composable/useCart.ts"
+import SearchBar from '@/components/reusables/SearchBar.vue'
 import logo from '@/assets/GameVoyagerLogo.png'
+import router from "@/router";
+
 
 const route = useRoute();
+const cartAnimation = ref(false);
+const user = ref<AuthUser | null>(null)
+const navRef = ref<HTMLElement | null>(null);
+const indicatorRef = ref<HTMLElement | null>(null);
+const dropdownOpen = ref(false)
+const cartItems = ref<any[]>([])
+const { totalCount, ensureCartLoaded, clearCartState } = useCart()
+
+let cleanup: Array<() => void> = [];
+
+const avatarUrl = computed(() => {
+    if (!user.value) return undefined
+    return `https://api.dicebear.com/7.x/adventurer/svg?seed=${user.value.username}`
+})
+
+const toggleDropdown = () => {
+    dropdownOpen.value = !dropdownOpen.value
+}
+
+const handleLogout = async () => {
+    logoutUser()
+    user.value = null
+    dropdownOpen.value = false
+    clearCartState()
+    await router.push("/")
+}
+
+const cartCount = computed(() =>
+    cartItems.value.reduce((sum, item) => sum + item.quantity, 0)
+)
+
+const loadCart = async () => {
+    try {
+        cartItems.value = await getCart()
+    } catch (error) {
+        console.error("Failed to load cart:", error)
+    }
+}
+
+onMounted(async () => {
+    loadCart()
+    await ensureCartLoaded()
+})
 
 const closeMobileDrawer = () => {
     const drawerEl = document.getElementById("mobileNav");
@@ -18,9 +67,6 @@ const closeMobileDrawer = () => {
 
     instance.hide();
 };
-
-/* cart */
-const cartAnimation = ref(false);
 
 const triggerIconBounce = () => {
     cartAnimation.value = false;
@@ -43,14 +89,6 @@ watch(
     },
     { immediate: true }
 );
-
-/* nav indicator */
-
-const navRef = ref<HTMLElement | null>(null);
-const indicatorRef = ref<HTMLElement | null>(null);
-
-let cleanup: Array<() => void> = [];
-
 const isDesktop = () => window.innerWidth >= 992;
 
 const hideIndicator = () => {
@@ -103,6 +141,7 @@ const moveIndicatorToActive = () => {
 };
 
 onMounted(async () => {
+    user.value = getStoredUser()
     await nextTick();
 
     const nav = navRef.value;
@@ -187,10 +226,10 @@ onBeforeUnmount(() => {
                             <span class="position-relative d-inline-block">
                                 <i class="fa-solid fa-cart-shopping fs-4"></i>
 
-                                <span
+                                <span v-if="totalCount > 0"
                                     class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
                                     style="font-size: 0.65rem;">
-                                    1
+                                    {{ totalCount }}
                                 </span>
                             </span>
 
@@ -200,17 +239,37 @@ onBeforeUnmount(() => {
                         </RouterLink>
                     </div>
 
-                    <RouterLink class="nav-link glow-link mx-3" to="/login" active-class="active">
-                        <div class="glow-link mx-2">
-                            <i class="fa-solid fa-user fs-4"></i>
+                    <template v-if="user">
+                        <img :src="avatarUrl" class="avatar" alt="User avatar" @click="toggleDropdown" />
+
+                        <div v-if="dropdownOpen" class="avatar-dropdown">
+                            <router-link to="/wishlist" class="dropdown-item">
+                                Wishlist
+                            </router-link>
+
+
+                            <button class="dropdown-item logout" @click="handleLogout">
+                                Sign Out
+                            </button>
                         </div>
-                    </RouterLink>
+
+
+                    </template>
+
+                    <template v-else>
+                        <RouterLink class="nav-link glow-link mx-3" to="/login" active-class="active">
+                            <div class="glow-link mx-2">
+                                <i class="fa-solid fa-user fs-4"></i>
+                            </div>
+                        </RouterLink>
+                    </template>
+
                 </div>
             </div>
         </nav>
     </div>
 
-    <!-- MOBILE HEADER -->
+
     <div class="mobile-header d-lg-none">
         <button class="mobile-menu-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileNav"
             aria-controls="mobileNav" aria-label="Open menu">
@@ -239,7 +298,7 @@ onBeforeUnmount(() => {
         </div>
     </div>
 
-    <!-- MOBILE DRAWER -->
+
     <div class="offcanvas offcanvas-start mobile-drawer d-lg-none" tabindex="-1" id="mobileNav"
         aria-labelledby="mobileNavLabel">
         <div class="offcanvas-header">
@@ -515,5 +574,58 @@ onBeforeUnmount(() => {
     min-width: 180px;
     margin-left: 16px;
     margin-right: 8px;
+}
+
+.avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid rgba(124, 92, 255, 0.6);
+}
+
+.avatar-container {
+    position: relative;
+}
+
+.avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid rgba(124, 92, 255, 0.6);
+}
+
+.avatar-dropdown {
+    position: absolute;
+    top: 46px;
+    right: 0;
+    width: 160px;
+    background: rgba(20, 20, 20, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+    z-index: 1000
+}
+
+.dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 10px 14px;
+    color: white;
+    text-decoration: none;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background: rgba(124, 92, 255, 0.2);
+}
+
+.logout {
+    color: #ff6e6e;
 }
 </style>

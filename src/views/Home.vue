@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import MainLayout from '@/components/layout/MainLayout.vue';
-import PopularGamesList from '../components/home-components/PopularGamesList.vue';
-import Hero from '../components/home-components/Hero.vue'
+import PopularGamesList from '../components/reusables/PopularGamesList.vue';
+import Hero from '../components/reusables/Hero.vue'
 
 </script>
 

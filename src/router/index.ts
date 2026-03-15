@@ -5,6 +5,7 @@ import Game from '@/views/Game.vue'
 import Home from '@/views/Home.vue'
 import Login from '@/views/Login.vue'
 import Register from '@/views/Register.vue'
+import Wishlist from '@/views/Wishlist.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 
 const router = createRouter({
@@ -54,6 +55,14 @@ const router = createRouter({
       component: Game,
       meta: { title: "Game Details", breadcrumb: [] }
     },
+
+    {
+      path: '/wishlist',
+      component: Wishlist,
+      meta: {
+        title: 'Wishlist', breadcrumb: 'Wishlist'
+      }
+    }
 
   ],
 })
