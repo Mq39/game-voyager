@@ -83,7 +83,7 @@ const emit = defineEmits<{
     gap: 1rem;
     color: inherit;
     text-decoration: none;
-    cursor: pointer;
+    cursor: auto;
 }
 
 .game-list-thumb-wrap {
