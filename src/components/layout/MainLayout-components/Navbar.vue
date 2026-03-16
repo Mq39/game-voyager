@@ -234,7 +234,7 @@ onBeforeUnmount(() => {
                             </span>
 
                             <span class="fw-semibold">
-                                €5.74
+
                             </span>
                         </RouterLink>
                     </div>
