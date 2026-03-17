@@ -12,7 +12,6 @@ import { showSuccessToast, showInfoToast, showAuthRequiredToast } from "@/utils/
 import { useAuth } from "@/composable/useAuthentication"
 
 
-
 const route = useRoute()
 const router = useRouter()
 

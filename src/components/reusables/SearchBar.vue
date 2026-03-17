@@ -4,6 +4,7 @@ import { useRoute, useRouter } from "vue-router"
 import type { Game } from "@/models/game.model"
 import { searchGames } from "@/services/game.service.ts"
 import logo from "@/assets/GameVoyagerLogo.png"
+import { response } from "express"
 
 const router = useRouter()
 const route = useRoute()
@@ -47,11 +48,11 @@ watch(searchQuery, (newValue: string) => {
         try {
             isLoading.value = true
 
-            const results = await searchGames(trimmed, 6)
+            const response = await searchGames(trimmed, 6)
 
             if (requestId !== latestRequest) return
 
-            suggestions.value = results
+            suggestions.value = response.results
             isOpen.value = true
         } catch (error) {
             console.error("Failed to fetch search suggestions:", error)
