@@ -1,22 +1,31 @@
 import { api } from "./api"
-import type { CartItem, AddToCartPayload } from "@/models/cart.model"
+
+export type CartItem = {
+    id: number
+    gameId: number
+    title: string
+    image: string | null
+    quantity: number
+}
 
 export const getCart = async (): Promise<CartItem[]> => {
     const res = await api.get("/cart")
-    return Array.isArray(res.data?.items)
-        ? res.data.items
-        : Array.isArray(res.data)
-            ? res.data
-            : []
+    return res.data.items
 }
 
-export const addToCartRequest = async (payload: AddToCartPayload) => {
+export const addToCartRequest = async (payload: {
+    gameId: number
+    title: string
+    image: string | null
+    quantity?: number
+}) => {
     const res = await api.post("/cart", {
         gameId: payload.gameId,
         title: payload.title,
         image: payload.image,
         quantity: payload.quantity ?? 1
     })
+
     return res.data
 }
 

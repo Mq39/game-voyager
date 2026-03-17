@@ -4,7 +4,6 @@ import MainLayout from "@/components/layout/MainLayout.vue"
 import { useCart } from "@/composable/useCart"
 import GameListItem from "@/components/reusables/GameListItem.vue"
 import { confirmRemoveFromCart, showSuccessToast } from "@/utils/alerts"
-import type { CartItem } from "@/models/cart.model"
 
 const {
     items,
@@ -18,8 +17,9 @@ const {
 const error = ref("")
 
 const totalItems = computed(() =>
-    items.value.reduce((sum: number, item: CartItem) => sum + item.quantity, 0)
+    items.value.reduce((sum, item) => sum + item.quantity, 0)
 )
+
 
 const removeItem = async (gameId: number): Promise<void> => {
     const confirmed = await confirmRemoveFromCart()

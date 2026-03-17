@@ -1,11 +1,15 @@
 import { computed, ref } from "vue"
-import { getCart, addToCartRequest, removeFromCartRequest, updateCartQuantityRequest, } from "@/services/cart.service"
-import type { CartItem } from "@/models/cart.model"
+import {
+    getCart,
+    addToCartRequest,
+    removeFromCartRequest,
+    updateCartQuantityRequest,
+    type CartItem
+} from "@/services/cart.service"
 
-
+const items = ref<CartItem[]>([])
 const loading = ref(false)
 const initialized = ref(false)
-const items = ref<CartItem[]>([])
 
 const totalCount = computed(() =>
     items.value.reduce((sum, item) => sum + item.quantity, 0)
@@ -15,12 +19,10 @@ export const useCart = () => {
     const loadCart = async (): Promise<void> => {
         try {
             loading.value = true
-            const data = await getCart()
-            items.value = Array.isArray(data) ? data : []
+            items.value = await getCart()
             initialized.value = true
         } catch (error) {
             console.error("Failed to load cart:", error)
-            items.value = []
         } finally {
             loading.value = false
         }

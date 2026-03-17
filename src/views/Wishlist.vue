@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue"
 import MainLayout from "@/components/layout/MainLayout.vue"
-import { getWishlist, removeFromWishlist } from "@/services/wishlist.service"
-import type { WishlistItem } from "@/models/wishlist.model"
+import { getWishlist, removeFromWishlist, type WishlistItem } from "@/services/wishlist.service"
 import GameListItem from "@/components/reusables/GameListItem.vue"
 import { useCart } from "@/composable/useCart"
 import { showSuccessToast } from "@/utils/alerts"

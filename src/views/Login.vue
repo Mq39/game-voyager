@@ -3,7 +3,7 @@ import { ref } from "vue"
 import { routerKey, useRouter } from "vue-router"
 import MainLayout from "@/components/layout/MainLayout.vue"
 import { loginUser, saveAuth } from "@/services/authentication.service.ts"
-import { useAuth } from "@/composable/useAuth"
+import { useAuth } from "@/composable/useAuthentication"
 
 const router = useRouter()
 
