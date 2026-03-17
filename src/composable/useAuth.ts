@@ -1,5 +1,5 @@
 import { computed, ref } from "vue"
-import type { AuthUser, AuthResponse } from "@/services/authentication.service"
+import type { AuthUser, AuthResponse } from "@/models/auth.model"
 import { getStoredUser, logoutUser as clearStoredAuth, saveAuth as persistAuth, getToken } from "@/services/authentication.service"
 
 const user = ref<AuthUser | null>(getStoredUser())

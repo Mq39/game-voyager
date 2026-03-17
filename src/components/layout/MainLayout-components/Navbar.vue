@@ -2,7 +2,7 @@
 import { nextTick, onBeforeUnmount, onMounted, ref, watch, computed } from "vue";
 import { useRoute } from "vue-router";
 import { getStoredUser, logoutUser } from "@/services/authentication.service";
-import type { AuthUser } from "@/services/authentication.service";
+import type { AuthUser } from "@/models/auth.model";
 import { getCart } from "@/services/cart.service";
 import { useCart } from "@/composable/useCart.ts"
 import SearchBar from '@/components/reusables/SearchBar.vue'

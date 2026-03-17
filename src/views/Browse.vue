@@ -9,7 +9,7 @@ import { addToWishlist, getWishlist, removeFromWishlist } from "@/services/wishl
 import { useCart } from "@/composable/useCart"
 import GameListItem from "@/components/reusables/GameListItem.vue"
 import { showSuccessToast, showInfoToast, showAuthRequiredToast } from "@/utils/alerts"
-import { useAuth } from "@/composable/useAuthentication"
+import { useAuth } from "@/composable/useAuth"
 
 
 const route = useRoute()

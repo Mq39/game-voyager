@@ -2,8 +2,8 @@
 import { ref } from "vue"
 import { useRouter } from "vue-router"
 import MainLayout from "@/components/layout/MainLayout.vue"
-import { registerUser, saveAuth } from "@/services/authentication.service"
-import { useAuth } from "@/composable/useAuthentication"
+import { registerUser } from "@/services/authentication.service"
+import { useAuth } from "@/composable/useAuth"
 
 const router = useRouter()
 

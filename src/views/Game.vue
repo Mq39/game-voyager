@@ -6,7 +6,7 @@ import MainLayout from "@/components/layout/MainLayout.vue"
 import { useCart } from "@/composable/useCart"
 import { addToWishlist, getWishlist, removeFromWishlist } from "@/services/wishlist.service"
 import { showSuccessToast, showInfoToast, showAuthRequiredToast } from "@/utils/alerts"
-import { useAuth } from "@/composable/useAuthentication"
+import { useAuth } from "@/composable/useAuth"
 
 type BreadcrumbItem = {
     label: string

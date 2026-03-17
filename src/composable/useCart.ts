@@ -1,11 +1,6 @@
 import { computed, ref } from "vue"
-import {
-    getCart,
-    addToCartRequest,
-    removeFromCartRequest,
-    updateCartQuantityRequest,
-    type CartItem
-} from "@/services/cart.service"
+import { getCart, addToCartRequest, removeFromCartRequest, updateCartQuantityRequest, } from "@/services/cart.service"
+import type { CartItem } from "@/models/cart.model"
 
 const items = ref<CartItem[]>([])
 const loading = ref(false)
