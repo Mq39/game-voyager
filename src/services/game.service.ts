@@ -13,7 +13,12 @@ export const browseGames = async (
     const response = await axios.get(`${API_BASE_URL}/api/games/browse`, {
         params
     })
-    return response.data
+
+    console.log("browseGames response:", response.data)
+
+    return {
+        results: Array.isArray(response.data?.results) ? response.data.results : []
+    }
 }
 
 export const searchGames = async (
@@ -23,7 +28,12 @@ export const searchGames = async (
     const response = await axios.get(`${API_BASE_URL}/api/games/search`, {
         params: { query, pageSize }
     })
-    return response.data
+
+    console.log("searchGames response:", response.data)
+
+    return {
+        results: Array.isArray(response.data?.results) ? response.data.results : []
+    }
 }
 
 export const getRandomGame = async (): Promise<RandomGame> => {
