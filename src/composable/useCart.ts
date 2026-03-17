@@ -14,10 +14,12 @@ export const useCart = () => {
     const loadCart = async (): Promise<void> => {
         try {
             loading.value = true
-            items.value = await getCart()
+            const data = await getCart()
+            items.value = Array.isArray(data) ? data : []
             initialized.value = true
         } catch (error) {
             console.error("Failed to load cart:", error)
+            items.value = []
         } finally {
             loading.value = false
         }

@@ -1,7 +1,7 @@
 import axios from "axios"
 import type { LoginPayload, RegisterPayload, AuthUser, AuthResponse } from "@/models/auth.model"
 
-const API_BASE_URL = "https://game-voyager-backend.vercel.app/"
+const API_BASE_URL = "https://game-voyager-backend.vercel.app"
 
 export const loginUser = async (payload: LoginPayload): Promise<AuthResponse> => {
     const response = await axios.post(`${API_BASE_URL}/auth/login`, payload)
