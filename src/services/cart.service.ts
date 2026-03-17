@@ -4,7 +4,16 @@ import type { CartItem, AddToCartPayload } from "@/models/cart.model"
 export const getCart = async (): Promise<CartItem[]> => {
     const res = await api.get("/cart")
     console.log("getCart response:", res.data)
-    return res.data.items
+
+    if (Array.isArray(res.data)) {
+        return res.data
+    }
+
+    if (Array.isArray(res.data?.items)) {
+        return res.data.items
+    }
+
+    return []
 }
 
 export const addToCartRequest = async (payload: AddToCartPayload) => {
