@@ -217,24 +217,6 @@ Game data is partially cached locally to reduce external API calls and improve p
 
 ---
 
-## Screenshots
-
-Create a `screenshots` directory in the root of the frontend project and add images such as:
-
-* Home page
-* Game details page
-* Cart page
-* Wishlist page
-* Authentication pages
-
-Example usage:
-
-```md
-![Home](./screenshots/home.png)
-```
-
----
-
 ## Key Implementation Details
 
 * JWT-based authentication with protected routes
